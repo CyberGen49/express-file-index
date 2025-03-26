@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index of <%= data.dir.name %></title>
+    <meta property="og:site_name" content="<%= data.serverName %>" />
+    <meta property="og:title" content="Index of <%= data.dir.name %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js" defer></script>
+</head>
+<body data-color-mode="light">
+    <div class="container">
+        <div class="header">
+            <% if (data.ancestors.length) { %>
+                <div class="ancestors">
+                    <% for (const ancestor of data.ancestors) { %>
+                        <a href="<%= ancestor.path %>" class="link"><%= ancestor.name %></a>
+                        <span class="sep">/</span>
+                    <% } %>
+                </div>
+            <% } %>
+            <div class="title"><%= data.dir.name %></div>
+        </div>
+        <div class="files">
+            <div class="colHeaders">
+                <div class="icon"></div>
+                <div class="name">Name</div>
+                <div class="modified">Modified</div>
+                <div class="size">Size</div>
+            </div>
+            <div class="entries">
+                <% for (const file of data.files) { %>
+                    <a class="entry" href="<%= file.path %>">
+                        <div class="icon material-symbols <%= file.type %>"><%= file.icon %></div>
+                        <div class="name" title="<%= file.name %>"><%= file.name %></div>
+                        <div class="modified" data-value="<%= file.modified %>">-</div>
+                        <div class="size" data-value="<%= file.size %>">-</div>
+                    </a>
+                <% } %>
+            </div>
+        </div>
+        <div class="footer">
+            Index provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
+            <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
+        </div>
+    </div>
+</body>
+<style>
+
+    /* Dark colors */
+    body[data-color-mode='dark'] {
+        --c-bg: hsl(0, 0%, 15%);
+        --c-text-normal: hsl(0, 0%, 100%);
+        --c-text-secondary: hsl(0, 0%, 75%);
+        --c-text-muted: hsl(0, 0%, 65%);
+        --c-border: hsl(0, 0%, 25%);
+        --c-bg-entry-hover: hsl(0, 0%, 20%);
+    }
+
+    /* Light colors */
+    body[data-color-mode='light'] {
+        --c-bg: hsl(0, 0%, 95%);
+        --c-text-normal: hsl(0, 0%, 0%);
+        --c-text-secondary: hsl(0, 0%, 30%);
+        --c-text-muted: hsl(0, 0%, 50%);
+        --c-border: hsl(0, 0%, 80%);
+        --c-bg-entry-hover: hsl(0, 0%, 92%);
+    }
+
+    body {
+        /* Global colors */
+        --c-icon-folder: hsl(40, 40%, 70%);
+        --c-icon-text: hsl(180, 40%, 70%);
+        --c-icon-image: hsl(230, 40%, 70%);
+        --c-icon-video: hsl(300, 40%, 70%);
+        --c-icon-audio: hsl(0, 40%, 70%);
+        /* Body styles */
+        background: var(--c-bg);
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        line-height: 1.2;
+        color: var(--c-text-normal);
+    }
+
+    .container {
+        margin: 0px auto;
+        padding: 24px 16px;
+        max-width: 1000px;
+    }
+
+    .header {
+        margin-bottom: 24px;
+    }
+    
+    a {
+        text-decoration: underline;
+        color: inherit;
+    }
+    a:hover,
+    a:focus-visible {
+        text-decoration: underline;
+        color: var(--c-text-normal);
+    }
+
+    .ancestors {
+        color: var(--c-text-muted);
+        margin-bottom: 4px;
+    }
+    .ancestors .link {
+        text-decoration: none;
+        color: var(--c-text-muted);
+        font-size: 15px;
+    }
+    .ancestors .link:hover,
+    .ancestors .link:focus-visible {
+        text-decoration: underline;
+        color: var(--c-text-normal);
+    }
+    .ancestors .sep {
+        color: var(--c-text-normal);
+        padding: 0px 4px;
+    }
+
+    .title {
+        font-size: 26px;
+        font-weight: bold;
+    }
+
+    .colHeaders,
+    .files .entry {
+        display: flex;
+        align-items: center;
+        padding: 0px 8px;
+        gap: 8px;
+        font-size: 14px;
+    }
+
+    .colHeaders {
+        color: var(--c-text-muted);
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--c-border);
+        margin-bottom: 4px;
+        font-size: 12px;
+    }
+
+    .files .entry {
+        color: var(--c-text-normal);
+        text-decoration: none;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+    }
+    .files .entry:hover {
+        background: var(--c-bg-entry-hover);
+        border: 1px solid var(--c-border);
+        color: var(--c-text-normal);
+        text-decoration: none;
+    }
+
+    .colHeaders > *,
+    .files .entry > * {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .colHeaders .icon,
+    .files .entry .icon {
+        width: 36px;
+        flex-shrink: 0;
+        text-align: center;
+        font-family: 'Material Symbols Outlined';
+        font-size: 24px;
+        color: var(--c-text-secondary);
+    }
+
+    .colHeaders .name,
+    .files .entry .name {
+        flex-grow: 1;
+    }
+    .colHeaders .modified,
+    .files .entry .modified {
+        width: 120px;
+        flex-shrink: 0;
+    }
+    .colHeaders .size,
+    .files .entry .size {
+        width: 80px;
+        flex-shrink: 0;
+    }
+
+    .files .entry .icon.folder {
+        color: var(--c-icon-folder);
+    }
+    .files .entry .icon.text {
+        color: var(--c-icon-text);
+    }
+    .files .entry .icon.image {
+        color: var(--c-icon-image);
+    }
+    .files .entry .icon.video {
+        color: var(--c-icon-video);
+    }
+    .files .entry .icon.audio {
+        color: var(--c-icon-audio);
+    }
+
+    .files .entry .modified,
+    .files .entry .size {
+        color: var(--c-text-secondary);
+    }
+
+    .footer {
+        font-size: 12px;
+        color: var(--c-text-muted);
+        text-align: center;
+        margin-top: 24px;
+    }
+
+</style>
+<script>
+
+    const roundSmart = (num) => {
+        const wholePart = Math.floor(num);
+        let roundedNum;
+
+        if (wholePart >= 100) {
+            roundedNum = num.toFixed(0);
+        } else if (wholePart >= 10) {
+            roundedNum = num.toFixed(1);
+        } else {
+            roundedNum = num.toFixed(2);
+        }
+
+        return parseFloat(roundedNum);
+    };
+
+    const formatBytes = bytes => {
+        if (bytes < 1024)
+            return bytes + ' B';
+        if (bytes < 1024 * 1024)
+            return roundSmart(bytes / 1024) + ' KiB';
+        if (bytes < 1024 * 1024 * 1024)
+            return roundSmart(bytes / 1024 / 1024) + ' MiB';
+        if (bytes < 1024 * 1024 * 1024 * 1024)
+            return roundSmart(bytes / 1024 / 1024 / 1024) + ' GiB';
+        return roundSmart(bytes / 1024 / 1024 / 1024 / 1024) + ' TiB';
+    }
+
+    const setColorMode = () => {
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
+    };
+
+    setColorMode();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Format dates
+        const fileTimes = document.querySelectorAll('.files .entry .modified');
+        for (const fileTime of fileTimes) {
+            if (fileTime.dataset.value == '-')
+                continue;
+            const value = parseInt(fileTime.dataset.value);
+            fileTime.title = dayjs(value).format('YYYY-MM-DD HH:mm:ss');
+            fileTime.innerText = dayjs(value).format('<%= data.fileTimeFormat %>');
+        }
+        // Format sizes
+        const fileSizes = document.querySelectorAll('.files .entry .size');
+        for (const fileSize of fileSizes) {
+            if (fileSize.dataset.value == '-')
+                continue;
+            const value = parseInt(fileSize.dataset.value);
+            fileSize.title = value + ' bytes';
+            fileSize.innerText = formatBytes(value);
+        }
+    });
+
+</script>
+</html>
