@@ -11,6 +11,7 @@
 - **Hidden Files**: Hide files with specific prefixes from the index.
 - **Zip Downloads**: Optionally allow downloading directories as zip archives.
 - **Recursive Directory Stats**: Calculate accurate sizes and modification times for directories.
+- **Readme Display**: Parse and display README.md files in directories.
 
 ## Installation
 
