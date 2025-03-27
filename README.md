@@ -48,7 +48,7 @@ The middleware accepts an options object to customize its behavior. Below are th
 
 ### Options
 
-| Option               | Type       | Default               | Description                                                                 |
+| Option               | Type       | Default Value | Description                                                                 |
 |----------------------|------------|-----------------------|-----------------------------------------------------------------------------|
 | `rootDir`            | `string`   | `'./'`                | The root directory of the file index.                                      |
 | `serverName`         | `string`   | Hostname of the server| The name to use for the root directory in the file index.                  |
@@ -67,6 +67,7 @@ You can customize the file index UI by providing your own EJS template file via 
 - `ancestors`: An array of parent directories., each with `name` and `path` properties.
 - `dir`: An object describing the current directory, with the same format as an `ancestors` item.
 - `files`: A sorted array of files and directories in the current directory. Each entry contains `name`, `path`, `isDirectory`, `size` (bytes), `modified` (ms timestamp), `type` (one of file, folder, text, image, audio, video, compressed, software), and `icon` (Google Material Symbol icon name) properties.
+- `readmeFilePath`: The path to the readme.md file in the current directory if one exists. `null` otherwise.
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
 - `fileTimeFormat`: The format to use for file modification times.

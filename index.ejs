@@ -26,17 +26,18 @@
             <div class="title"><%= data.dir.name %></div>
             <div class="actions">
                 <button id="btnShareDir" class="btn" title="Copy the link to this folder">
-                    <span class="icon">share</span>
+                    <span class="icon">link</span>
                     <span class="label">Copy link</span>
+                </button>
+                <button id="btnSort" class="btn secondary" title="Change file sort order...">
+                    <span class="icon">sort</span>
+                    <span class="label">Sort...</span>
                 </button>
                 <% if (data.allowZipDownloads) { %>
                     <a href="?zip=true" class="btn secondary square" download title="Download this folder as zip">
                         <span class="icon">download</span>
                     </a>
                 <% } %>
-                <button id="btnSort" class="btn secondary square" title="Change file sort order...">
-                    <span class="icon">sort</span>
-                </button>
             </div>
         </div>
         <div class="files">
@@ -81,7 +82,22 @@
                 <% } %>
             </div>
         </div>
-        <div id="readme" style="display: none"></div>
+        <% if (data.readmeHtml) { %>
+            <div id="readme">
+                <div class="top">
+                    <!-- <a href="<%= data.readmePath %>" class="btn secondary square" title="Open readme...">
+                        <span class="icon">open_in_new</span>
+                    </a> -->
+                    <span>README.md</span>
+                    <!-- <button id="collapseReadme" class="btn secondary square">
+                        <span class="icon">keyboard_arrow_down</span>
+                    </button> -->
+                </div>
+                <div class="body">
+                    <%- data.readmeHtml %>
+                </div>
+            </div>
+        <% } %>
         <div class="footer">
             Index provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
@@ -93,6 +109,7 @@
     /* Dark colors */
     body[data-color-mode='dark'] {
         --c-bg: hsl(0, 0%, 15%);
+        --c-readme-bg: hsl(0, 0%, 13%);
         --c-text-normal: white;
         --c-text-secondary: hsl(0, 0%, 75%);
         --c-text-muted: hsl(0, 0%, 65%);
@@ -116,6 +133,7 @@
     /* Light colors */
     body[data-color-mode='light'] {
         --c-bg: hsl(0, 0%, 95%);
+        --c-readme-bg: hsl(0, 0%, 97%);
         --c-text-normal: hsl(0, 0%, 0%);
         --c-text-secondary: hsl(0, 0%, 30%);
         --c-text-muted: hsl(0, 0%, 50%);
@@ -155,10 +173,37 @@
     * {
         box-sizing: border-box;
     }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: bold;
+        margin: 1em 0px 0.4em 0px;
+        padding-bottom: 0.2em;
+        border-bottom: 1px solid var(--c-border);
+    }
+    h1 { font-size: 28px }
+    h2 { font-size: 24px }
+    h3 { font-size: 20px }
+    h4 { font-size: 18px }
+    h5 { font-size: 16px }
+    h6 { font-size: 14px }
+
+    p, li {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+    p {
+        margin: 0px 0px 0.8em 0px;
+    }
+    li {
+        margin: 0px 0px 0.5em 0px;
+    }
+    ul:not(:last-child), ol:not(:last-child) {
+        margin: 0px 0px 0.8em 0px;
+    }
     
     a {
         text-decoration: underline;
-        color: inherit;
+        color: var(--c-text-secondary);
     }
     a:hover,
     a:focus-visible {
@@ -166,10 +211,57 @@
         color: var(--c-text-normal);
     }
 
+    pre {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--c-border);
+    }
+    pre code {
+        font-family: monospace;
+    }
+    code:not(pre code) {
+        padding: 2px 4px;
+        border-radius: 4px;
+        border: 1px solid var(--c-border);
+    }
+
+    blockquote {
+        margin: 0px 0px 0.8em 16px;
+        padding: 8px 12px;
+        border-left: 4px solid var(--c-border);
+        border-radius: 4px;
+    }
+
     .container {
         margin: 0px auto;
         padding: 24px 16px;
         max-width: 1000px;
+    }
+
+    #readme {
+        margin: 16px -8px 0px -8px;
+        border-radius: 16px;
+        background: var(--c-readme-bg);
+        border: 1px solid var(--c-border);
+        overflow: hidden;
+    }
+    #readme .top {
+        display: flex;
+        padding: 12px 16px;
+        align-items: center;
+        border: 1px solid var(--c-border);
+        gap: 8px;
+        border-radius: 0px 0px 16px 16px;
+        margin: -1px;
+    }
+    #readme .body {
+        padding: 16px;
+    }
+    #readme .body > *:first-child {
+        margin-top: 0px;
+    }
+    #readme .body > *:last-child {
+        margin-bottom: 0px;
     }
 
     .btn {
@@ -335,7 +427,7 @@
         align-items: center;
     }
     .colHeaders .icon {
-        font-size: 16px;
+        font-size: 18px;
         font-family: 'Material Symbols Outlined';
         margin: -8px 0px;
         user-select: none;
@@ -362,8 +454,8 @@
         text-overflow: ellipsis;
     }
 
-    .colHeaders .icon,
-    .files .entry .icon {
+    .colHeaders > .icon,
+    .files .entry > .icon {
         width: 36px;
         flex-shrink: 0;
         text-align: center;

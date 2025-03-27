@@ -3,6 +3,9 @@ const path = require('path');
 const Express = require('express');
 const ejs = require('ejs');
 const archiver = require('archiver');
+const { marked } = require('marked');
+const DOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
 
 /**
  * @typedef {Object} DefaultIndexOptions
@@ -38,7 +41,18 @@ const archiver = require('archiver');
  * @property {string} fileTimeFormat A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
  * 
  * Defaults to `MMM D, YYYY`.
+ * @property {string} enableReadmes Whether readme.md files should be parsed and displayed in the file index.
+ * 
+ * Defaults to `true`.
  */
+
+const window = new JSDOM('').window;
+const purify = DOMPurify(window);
+const mdToHtml = md => {
+    const dirtyHtml = marked(md);
+    const cleanHtml = purify.sanitize(dirtyHtml);
+    return cleanHtml;
+}
 
 /**
  * @type {DefaultIndexOptions}
@@ -51,7 +65,8 @@ const defaultOpts = {
     statDirs: false,
     allowZipDownloads: false,
     ejsFilePath: path.join(__dirname, 'index.ejs'),
-    fileTimeFormat: 'MMM D, YYYY'
+    fileTimeFormat: 'MMM D, YYYY',
+    enableReadmes: true
 };
 
 /**
@@ -72,6 +87,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     const allowZipDownloads = options.allowZipDownloads || defaultOpts.allowZipDownloads;
     const ejsFilePath = options.ejsFilePath || defaultOpts.ejsFilePath;
     const fileTimeFormat = options.fileTimeFormat || defaultOpts.fileTimeFormat;
+    const enableReadmes = options.enableReadmes || defaultOpts.enableReadmes;
 
     // Make sure the file exists
     try {
@@ -134,6 +150,8 @@ module.exports = (options = {}) => async (req, res, next) => {
         const fileNames = await fs.readdir(pathAbs);
         const filesOnly = [];
         const dirsOnly = [];
+        let readmeHtml;
+        let readmePath;
         for (const fileName of fileNames) {
 
             // Skip if the file is hidden
@@ -169,6 +187,14 @@ module.exports = (options = {}) => async (req, res, next) => {
                 await recurse(filePathAbs);
                 size = size || '-';
                 modified = modified || '-';
+            }
+
+            // Process readme if enabled
+            const fileNameLower = fileName.toLowerCase();
+            if (!isDirectory && enableReadmes && fileNameLower === 'readme.md' && !readmeHtml) {
+                const md = await fs.readFile(filePathAbs, 'utf8');
+                readmeHtml = mdToHtml(md);
+                readmePath = filePathRel;
             }
 
             // Determine file type and icon
@@ -253,6 +279,8 @@ module.exports = (options = {}) => async (req, res, next) => {
                 files,
                 fileTimeFormat,
                 allowZipDownloads,
+                readmeHtml,
+                readmePath,
                 nodejsVersion: process.version,
                 osPlatform: process.platform,
                 osArch: process.arch
