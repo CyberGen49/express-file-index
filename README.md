@@ -58,6 +58,7 @@ The middleware accepts an options object to customize its behavior. Below are th
 | `allowZipDownloads`  | `boolean`  | `false`               | Whether to allow downloading directories as zip archives.                  |
 | `ejsFilePath`        | `string`   | Built-in template     | Path to a custom EJS template for the file index.                          |
 | `fileTimeFormat`     | `string`   | `'MMM D, YYYY'`       | Format for displayed file modification times (uses Day.js format).         |
+| `enableReadmes`      | `boolean`  | `true`                | Whether to parse and display README.md files in the file index.            |
 
 ## Customization
 
@@ -75,3 +76,21 @@ You can customize the file index UI by providing your own EJS template file via 
 - `nodejsVersion`: The Node.js version.
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.
+
+## README.md Display
+
+If the `enableReadmes` option is set to `true` (default), the middleware will look for a `README.md` file in each directory. If found, it will parse the file as Markdown and display it below the file index. The content is sanitized to prevent XSS attacks.
+
+The following data is available for customizing the README display:
+
+- `readmeHtml`: The sanitized HTML content of the README.md file.
+- `readmeFilePath`: The path to the README.md file, or `null` if none exists.
+
+To disable this feature, set `enableReadmes` to `false` in the options:
+
+```javascript
+app.use(index({
+    rootDir: './public',
+    enableReadmes: false
+}));
+```
