@@ -1,18 +1,43 @@
+const fs = require('fs').promises; // Use the promise-based fs API
+const path = require('path');
 const Express = require('express');
 const ejs = require('ejs');
-const fs = require('fs');
-const path = require('path');
+const archiver = require('archiver');
 
 /**
  * @typedef {Object} DefaultIndexOptions
- * @property {string} rootDir The root directory of the file index. Defaults to `./`.
- * @property {string} serverName The name to use for the root directory in the file index. Defaults to the hostname of the server.
- * @property {string[]} hiddenFilePrefixes A list of file prefixes that should be hidden from the file index. This option DOES NOT block access to these files; it only hides them from the index. Defaults to `[ '.', '_' ]`.
- * @property {string[]} indexFiles A list of file names that should be used as the index file for directories instead of the file list. Defaults to `[ 'index.html', 'index.htm' ]`.
- * @property {string[]} fileIndexEjs The path to an EJS template file to use for the file index. Defaults to the built-in template.
+ * @property {string} rootDir The root directory of the file index.
+ * 
+ * Defaults to `./`.
+ * @property {string} serverName The name to use for the root directory in the file index.
+ * 
+ * Defaults to the hostname of the server.
+ * @property {string[]} hiddenFilePrefixes A list of file prefixes that should be hidden from the file index.
+ * 
+ * **IMPORTANT:** This option DOES NOT block access to these files; it only hides them from view in the index. They are still downloadable by path and in zip archives.
+ * 
+ * Defaults to `[ '.', '_' ]`.
+ * @property {string[]} indexFiles A list of file names that should be sent on directory requests instead of the file index.
+ * 
+ * Defaults to `[ 'index.html' ]`.
+ * @property {boolean} statDirs Whether to recursively process directories to calculate accurate sizes and modification times.
+ * 
+ * This will slow index loading if you have lots of files and/or slow storage.
+ * 
+ * Defaults to `false`.
+ * @property {boolean} allowZipDownloads Whether to allow downloading directories as zip archives.
+ * 
+ * When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are generated and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
+ * 
+ * Defaults to `false`.
+ * @property {string[]} ejsFilePath The path to an EJS template file to use for the file index. 
  * 
  * This option is not recommended for most use cases, but can be used to develop your own file index UI. See the project readme for details.
- * @property {string} fileTimeFormat A string representing the format of displayed file modification times. Defaults to `MMM D, YYYY`. See [Day.js formats](https://day.js.org/docs/en/display/format) for more information.
+ * 
+ * Defaults to the built-in template.
+ * @property {string} fileTimeFormat A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
+ * 
+ * Defaults to `MMM D, YYYY`.
  */
 
 /**
@@ -20,9 +45,12 @@ const path = require('path');
  */
 const defaultOpts = {
     rootDir: './',
-    hiddenFilePrefixes: [ '.', '_' ],
-    indexFiles: [ 'index.html', 'index.htm' ],
     serverName: '',
+    hiddenFilePrefixes: [ '.', '_' ],
+    indexFiles: [ 'index.html' ],
+    statDirs: false,
+    allowZipDownloads: false,
+    ejsFilePath: path.join(__dirname, 'index.ejs'),
     fileTimeFormat: 'MMM D, YYYY'
 };
 
@@ -32,44 +60,119 @@ const defaultOpts = {
  * @returns {Express.Router} An Express router to be used by your app.
  */
 module.exports = (options = {}) => async (req, res, next) => {
+
     // Get paths and options
     const pathRoot = path.resolve(options.rootDir || defaultOpts.rootDir);
     const pathRel = path.normalize(decodeURI(req.path));
     const pathAbs = path.normalize(path.join(pathRoot, pathRel));
+    const serverName = options.serverName || req.hostname || 'server';
     const hiddenFilePrefixes = options.hiddenFilePrefixes || defaultOpts.hiddenFilePrefixes;
     const indexFiles = options.indexFiles || defaultOpts.indexFiles;
-    const serverName = options.serverName || req.hostname || 'server';
+    const statDirs = options.statDirs || defaultOpts.statDirs;
+    const allowZipDownloads = options.allowZipDownloads || defaultOpts.allowZipDownloads;
+    const ejsFilePath = options.ejsFilePath || defaultOpts.ejsFilePath;
     const fileTimeFormat = options.fileTimeFormat || defaultOpts.fileTimeFormat;
+
     // Make sure the file exists
-    if (!fs.existsSync(pathAbs))
+    try {
+        await fs.access(pathAbs);
+    } catch {
         return next();
+    }
+
     // Check if the request is a file or directory
-    const stats = fs.statSync(pathAbs);
+    const stats = await fs.stat(pathAbs);
     if (stats.isDirectory()) {
+
+        // Zip and send if requested and enabled
+        if (req.query.zip && allowZipDownloads) {
+            const zipFileName = path.basename(pathAbs) + '.zip';
+            res.attachment(zipFileName);
+            // Create archive and recursively pipe files to response
+            const archive = archiver('zip', { zlib: { level: 9 } });
+            archive.on('error', (err) => res.status(500).send({ error: err.message }));
+            archive.pipe(res);
+            const recurse = async (dirPath) => {
+                const fileNames = await fs.readdir(dirPath);
+                for (const fileName of fileNames) {
+                    if (hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
+                        continue;
+                    const filePathAbs = path.join(dirPath, fileName);
+                    const filePathRel = path.relative(pathAbs, filePathAbs);
+                    const stats = await fs.stat(filePathAbs);
+                    if (stats.isDirectory()) {
+                        recurse(filePathAbs);
+                        await recurse(filePathAbs);
+                    } else {
+                        archive.file(filePathAbs, { name: filePathRel });
+                    }
+                }
+            };
+            await recurse(pathAbs);
+            archive.finalize();
+            // Clean up on user disconnect
+            req.on('close', () => {
+                if (res.headersSent) {
+                    archive.abort();
+                }
+            });
+            return;
+        }
+
         // Check for index files
         for (const name of indexFiles) {
             const pathIndexFile = path.join(pathAbs, name);
-            if (fs.existsSync(pathIndexFile)) {
+            try {
+                await fs.access(pathIndexFile);
                 return res.sendFile(pathIndexFile);
+            } catch {
+                // Continue to the next index file
             }
         }
+
         // Read directory
-        const fileNames = fs.readdirSync(pathAbs);
+        const fileNames = await fs.readdir(pathAbs);
         const filesOnly = [];
         const dirsOnly = [];
         for (const fileName of fileNames) {
+
             // Skip if the file is hidden
             if (hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
                 continue;
+
             // Get file paths and stats
             const filePathRel = path.join(pathRel, fileName);
             const filePathAbs = path.join(pathAbs, fileName);
             const fileExt = path.extname(fileName).toLowerCase();
-            const stats = fs.statSync(filePathAbs);
-            const isDir = stats.isDirectory();
-            // Compile type categories with all even remotely common extensions
-            const typeExtensions = require(path.join(__dirname, 'type-extensions.json'));
+            const stats = await fs.stat(filePathAbs);
+            const isDirectory = stats.isDirectory();
+            let size = isDirectory ? '-' : stats.size;
+            let modified = isDirectory ? '-' : stats.mtimeMs;
+
+            // Process directories if enabled
+            if (isDirectory && statDirs) {
+                size = 0;
+                modified = 0;
+                const recurse = async (dirPath) => {
+                    const fileNames = await fs.readdir(dirPath);
+                    for (const fileName of fileNames) {
+                        const filePathAbs = path.join(dirPath, fileName);
+                        const stats = await fs.stat(filePathAbs);
+                        if (stats.isDirectory()) {
+                            await recurse(filePathAbs);
+                        } else {
+                            size += stats.size;
+                            modified = Math.max(modified, stats.mtimeMs);
+                        }
+                    }
+                };
+                await recurse(filePathAbs);
+                size = size || '-';
+                modified = modified || '-';
+            }
+
             // Determine file type and icon
+            const typeExtensions = require(path.join(__dirname, 'type-extensions.json'));
             const typeIcons = {
                 file: 'draft',
                 folder: 'folder',
@@ -80,20 +183,23 @@ module.exports = (options = {}) => async (req, res, next) => {
                 compressed: 'folder_zip',
                 software: 'wysiwyg'
             };
-            const fileType = isDir ? 'folder' : Object.keys(typeExtensions).find(type =>
+            const fileType = isDirectory ? 'folder' : Object.keys(typeExtensions).find(type =>
                 typeExtensions[type].includes(fileExt)
             ) || 'file';
+
             // Add to list
-            (isDir ? dirsOnly : filesOnly).push({
+            (isDirectory ? dirsOnly : filesOnly).push({
                 name: fileName,
                 path: filePathRel,
-                isDirectory: isDir,
-                size: isDir ? '-' : stats.size,
-                modified: isDir ? '-' : stats.mtimeMs,
+                isDirectory,
+                size,
+                modified,
                 type: fileType,
                 icon: typeIcons[fileType]
             });
+
         }
+
         // Sort and combine files
         const sortType = req.query.sortType || 'name';
         const sortOrder = req.query.sortOrder || 'asc';
@@ -110,6 +216,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             dirsOnly.reverse();
             filesOnly.reverse();
         }
+
         // Add parent directory
         if (pathRel !== '/') {
             dirsOnly.unshift({
@@ -123,6 +230,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             });
         }
         const files = [ ...dirsOnly, ...filesOnly ];
+
         // Get parent directory names and paths
         const ancestorDirs = [
             { name: serverName, path: '/' },
@@ -133,24 +241,32 @@ module.exports = (options = {}) => async (req, res, next) => {
             const parentName = pathParts[i];
             ancestorDirs.push({ name: parentName, path: parentPath });
         }
+
         // Render index
-        const html = await ejs.renderFile(path.join(__dirname, 'index.ejs'), {
+        const html = await ejs.renderFile(ejsFilePath, {
             data: {
                 serverName,
                 ancestors: ancestorDirs,
                 dir: ancestorDirs.pop(),
+                sortType,
+                sortOrder,
                 files,
                 fileTimeFormat,
+                allowZipDownloads,
                 nodejsVersion: process.version,
                 osPlatform: process.platform,
                 osArch: process.arch
             }
         });
+
         // Respond
         res.setHeader('Content-Type', 'text/html');
         return res.end(html);
+
     } else {
+
         // Serve static file
         return res.sendFile(pathAbs);
+
     }
 };

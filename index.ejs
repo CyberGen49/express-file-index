@@ -8,11 +8,11 @@
     <meta property="og:title" content="Index of <%= data.dir.name %>" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js" defer></script>
 </head>
-<body data-color-mode="light">
+<body data-color-mode="light" data-can-folders-download="<%= data.allowZipDownloads %>" data-file-time-format="<%= data.fileTimeFormat %>">
     <div class="container">
         <div class="header">
             <% if (data.ancestors.length) { %>
@@ -24,25 +24,64 @@
                 </div>
             <% } %>
             <div class="title"><%= data.dir.name %></div>
+            <div class="actions">
+                <button id="btnShareDir" class="btn" title="Copy the link to this folder">
+                    <span class="icon">share</span>
+                    <span class="label">Copy link</span>
+                </button>
+                <% if (data.allowZipDownloads) { %>
+                    <a href="?zip=true" class="btn secondary square" download title="Download this folder as zip">
+                        <span class="icon">download</span>
+                    </a>
+                <% } %>
+                <button id="btnSort" class="btn secondary square" title="Change file sort order...">
+                    <span class="icon">sort</span>
+                </button>
+            </div>
         </div>
         <div class="files">
             <div class="colHeaders">
                 <div class="icon"></div>
-                <div class="name">Name</div>
-                <div class="modified">Modified</div>
-                <div class="size">Size</div>
+                <div class="name">
+                    <span>Name</span>
+                    <% if (data.sortType == 'name') { %>
+                        <span class="icon"><%= data.sortOrder == 'asc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up' %></span>
+                    <% } %>
+                </div>
+                <div class="modified">
+                    <span>Modified</span>
+                    <% if (data.sortType == 'modified') { %>
+                        <span class="icon"><%= data.sortOrder == 'asc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up' %></span>
+                    <% } %>
+                </div>
+                <div class="size">
+                    <span>Size</span>
+                    <% if (data.sortType == 'size') { %>
+                        <span class="icon"><%= data.sortOrder == 'asc' ? 'keyboard_arrow_down' : 'keyboard_arrow_up' %></span>
+                    <% } %>
+                </div>
             </div>
             <div class="entries">
                 <% for (const file of data.files) { %>
-                    <a class="entry" href="<%= file.path %>">
+                    <a class="entry" href="<%= file.path %>" data-type="<%= file.type %>">
                         <div class="icon material-symbols <%= file.type %>"><%= file.icon %></div>
-                        <div class="name" title="<%= file.name %>"><%= file.name %></div>
-                        <div class="modified" data-value="<%= file.modified %>">-</div>
-                        <div class="size" data-value="<%= file.size %>">-</div>
+                        <div class="name" title="<%= file.name %>">
+                            <span><%= file.name %></span>
+                            <% if (file.modified != '-' && file.size != '-') { %>
+                                <span class="nameLore">
+                                    <span data-timestamp="<%= file.modified %>"></span>
+                                    <span>•</span>
+                                    <span data-bytes="<%= file.size %>"></span>
+                                </span>
+                            <% } %>
+                        </div>
+                        <div class="modified" data-timestamp="<%= file.modified %>">-</div>
+                        <div class="size" data-bytes="<%= file.size %>">-</div>
                     </a>
                 <% } %>
             </div>
         </div>
+        <div id="readme" style="display: none"></div>
         <div class="footer">
             Index provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
@@ -54,11 +93,24 @@
     /* Dark colors */
     body[data-color-mode='dark'] {
         --c-bg: hsl(0, 0%, 15%);
-        --c-text-normal: hsl(0, 0%, 100%);
+        --c-text-normal: white;
         --c-text-secondary: hsl(0, 0%, 75%);
         --c-text-muted: hsl(0, 0%, 65%);
         --c-border: hsl(0, 0%, 25%);
         --c-bg-entry-hover: hsl(0, 0%, 20%);
+        --c-btn-primary-bg: hsl(0, 0%, 100%);
+        --c-btn-primary-bg-hover: hsl(0, 0%, 90%);
+        --c-btn-primary-border-hover: hsl(0, 0%, 100%);
+        --c-btn-primary-text: black;
+        --c-btn-secondary-bg: hsl(0, 0%, 25%);
+        --c-btn-secondary-bg-hover: hsl(0, 0%, 35%);
+        --c-btn-secondary-border-hover: hsl(0, 0%, 45%);
+        --c-btn-secondary-text: white;
+        --c-contextmenu-bg: hsl(0, 0%, 20%);
+        --c-contextmenu-border: hsl(0, 0%, 30%);
+        --c-contextmenu-item-text: hsl(0, 0%, 80%);
+        --c-contextmenu-item-bg-hover: hsl(0, 0%, 25%);
+        --c-contextmenu-item-border-hover: hsl(0, 0%, 35%);
     }
 
     /* Light colors */
@@ -69,15 +121,29 @@
         --c-text-muted: hsl(0, 0%, 50%);
         --c-border: hsl(0, 0%, 80%);
         --c-bg-entry-hover: hsl(0, 0%, 92%);
+        --c-btn-primary-bg: hsl(0, 0%, 0%);
+        --c-btn-primary-bg-hover: hsl(0, 0%, 30%);
+        --c-btn-primary-border-hover: hsl(0, 0%, 0%);
+        --c-btn-primary-text: white;
+        --c-btn-secondary-bg: hsl(0, 0%, 85%);
+        --c-btn-secondary-bg-hover: hsl(0, 0%, 75%);
+        --c-btn-secondary-border-hover: hsl(0, 0%, 65%);
+        --c-btn-secondary-text: black;
+        --c-contextmenu-bg: hsl(0, 0%, 95%);
+        --c-contextmenu-border: hsl(0, 0%, 80%);
+        --c-contextmenu-item-text: hsl(0, 0%, 30%);
+        --c-contextmenu-item-bg-hover: hsl(0, 0%, 90%);
+        --c-contextmenu-item-border-hover: hsl(0, 0%, 80%);
     }
 
     body {
         /* Global colors */
-        --c-icon-folder: hsl(40, 40%, 70%);
-        --c-icon-text: hsl(180, 40%, 70%);
-        --c-icon-image: hsl(230, 40%, 70%);
-        --c-icon-video: hsl(300, 40%, 70%);
-        --c-icon-audio: hsl(0, 40%, 70%);
+        --c-icon-folder: hsl(40, 40%, 60%);
+        --c-icon-text: hsl(180, 40%, 60%);
+        --c-icon-image: hsl(220, 40%, 60%);
+        --c-icon-video: hsl(0, 40%, 60%);
+        --c-icon-audio: hsl(300, 40%, 60%);
+        --c-icon-file: hsl(0, 0%, 50%);
         /* Body styles */
         background: var(--c-bg);
         font-family: 'Inter', sans-serif;
@@ -86,14 +152,8 @@
         color: var(--c-text-normal);
     }
 
-    .container {
-        margin: 0px auto;
-        padding: 24px 16px;
-        max-width: 1000px;
-    }
-
-    .header {
-        margin-bottom: 24px;
+    * {
+        box-sizing: border-box;
     }
     
     a {
@@ -106,23 +166,146 @@
         color: var(--c-text-normal);
     }
 
+    .container {
+        margin: 0px auto;
+        padding: 24px 16px;
+        max-width: 1000px;
+    }
+
+    .btn {
+        height: 36px;
+        padding: 0px 12px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-family: 'Inter';
+        font-weight: bold;
+        font-size: 12px;
+        color: var(--c-btn-primary-text);
+        background: var(--c-btn-primary-bg);
+        cursor: pointer;
+        flex-shrink: 0;
+        user-select: none;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1;
+        text-decoration: none;
+    }
+    .btn:hover,
+    .btn:focus-visible {
+        background: var(--c-btn-primary-bg-hover);
+        border: 1px solid var(--c-btn-primary-border-hover);
+        text-decoration: none;
+        color: var(--c-btn-primary-text);
+    }
+    .btn.secondary {
+        background: var(--c-btn-secondary-bg);
+        color: var(--c-btn-secondary-text);
+    }
+    .btn.secondary:hover,
+    .btn.secondary:focus-visible {
+        background: var(--c-btn-secondary-bg-hover);
+        border: 1px solid var(--c-btn-secondary-border-hover);
+        color: var(--c-btn-secondary-text);
+    }
+    .btn.square {
+        border-radius: 8px;
+        padding: 0px;
+        width: 36px;
+        height: 36px;
+    }
+    .btn .icon {
+        font-size: 22px;
+        font-family: 'Material Symbols Outlined';
+        font-weight: normal;
+    }
+
+    .contextMenu {
+        position: fixed;
+        background: var(--c-contextmenu-bg);
+        border: 1px solid var(--c-contextmenu-border);
+        max-height: calc(100% - 8px);
+        margin: 4px;
+        padding: 8px;
+        border-radius: 16px;
+        box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        transition: 0.1s ease-in-out;
+        scrollbar-width: none;
+    }
+    .contextMenu::backdrop {
+        background: transparent;
+        margin: 0px;
+        padding: 0px;
+    }
+    .contextMenu:not(.visible) {
+        opacity: 0;
+    }
+    .contextMenu.visible {
+        opacity: 1;
+    }
+    .contextMenu .item {
+        justify-content: flex-start;
+        text-align: left;
+        height: 32px;
+        background: transparent;
+        border-color: transparent;
+        color: var(--c-contextmenu-item-text);
+        width: 100%;
+    }
+    .contextMenu .item:hover,
+    .contextMenu .item:focus-visible {
+        background: var(--c-contextmenu-item-bg-hover);
+        border-color: var(--c-contextmenu-item-border-hover);
+    }
+    .contextMenu .item .icon {
+        font-size: 20px;
+    }
+    .contextMenu .separator {
+        height: 0px;
+        border-bottom: 1px solid var(--c-contextmenu-border);
+        margin: 8px;
+        flex-shrink: 0;
+    }
+
+    .header {
+        margin-bottom: 24px;
+    }
+
     .ancestors {
         color: var(--c-text-muted);
         margin-bottom: 4px;
+        margin-left: -4px;
     }
     .ancestors .link {
         text-decoration: none;
         color: var(--c-text-muted);
         font-size: 15px;
+        border: 1px solid transparent;
+        padding: 3px 4px;
+        border-radius: 4px;
+        line-height: 1.4;
     }
     .ancestors .link:hover,
     .ancestors .link:focus-visible {
-        text-decoration: underline;
+        background: var(--c-bg-entry-hover);
+        border: 1px solid var(--c-border);
         color: var(--c-text-normal);
+        text-decoration: none;
     }
     .ancestors .sep {
         color: var(--c-text-normal);
-        padding: 0px 4px;
+        padding: 0px 2px;
+    }
+
+    .header .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
     }
 
     .title {
@@ -146,11 +329,22 @@
         margin-bottom: 4px;
         font-size: 12px;
     }
+    .colHeaders > * {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+    .colHeaders .icon {
+        font-size: 16px;
+        font-family: 'Material Symbols Outlined';
+        margin: -8px 0px;
+        user-select: none;
+    }
 
     .files .entry {
         color: var(--c-text-normal);
         text-decoration: none;
-        height: 32px;
+        height: 36px;
         border-radius: 8px;
         border: 1px solid transparent;
     }
@@ -161,8 +355,8 @@
         text-decoration: none;
     }
 
-    .colHeaders > *,
-    .files .entry > * {
+    .colHeaders *,
+    .files .entry * {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -182,14 +376,25 @@
     .files .entry .name {
         flex-grow: 1;
     }
+    .files .entry .name {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .files .entry .nameLore {
+        display: none;
+        font-size: 12px;
+        color: var(--c-text-secondary);
+        gap: 4px;
+    }
     .colHeaders .modified,
     .files .entry .modified {
-        width: 120px;
+        width: 150px;
         flex-shrink: 0;
     }
     .colHeaders .size,
     .files .entry .size {
-        width: 80px;
+        width: 100px;
         flex-shrink: 0;
     }
 
@@ -208,6 +413,9 @@
     .files .entry .icon.audio {
         color: var(--c-icon-audio);
     }
+    .files .entry .icon.file {
+        color: var(--c-icon-file);
+    }
 
     .files .entry .modified,
     .files .entry .size {
@@ -219,6 +427,28 @@
         color: var(--c-text-muted);
         text-align: center;
         margin-top: 24px;
+    }
+
+    @media (max-width: 600px) {
+
+        .container {
+            padding: 24px 8px;
+        }
+
+        .colHeaders *,
+        .files .entry .modified,
+        .files .entry .size {
+            display: none;
+        }
+
+        .files .entry {
+            height: 48px;
+        }
+
+        .files .entry .nameLore {
+            display: flex;
+        }
+
     }
 
 </style>
@@ -251,6 +481,103 @@
         return roundSmart(bytes / 1024 / 1024 / 1024 / 1024) + ' TiB';
     }
 
+    const mouse = { x: 0, y: 0 };
+    document.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    const showContextMenu = (options, shouldPosition = true) => {
+        options = options || {};
+        options.width = options.width || 'auto';
+        options.items = options.items || [];
+        options.x = options.x || mouse.x;
+        options.y = options.y || mouse.y;
+        const elMenu = document.createElement('dialog');
+        elMenu.classList.add('contextMenu', 'flex', 'col', 'gap-2');
+        for (const item of options.items) {
+            switch (item.type) {
+                case 'item': {
+                    const btn = document.createElement('button');
+                    btn.classList = 'item btn secondary';
+                    btn.disabled = !!item.disabled;
+                    btn.innerHTML += `<span class="icon">${item.icon || ''}</span>`;
+                    btn.innerHTML += `<span class="label grow">${item.label}</span>`;
+                    if (item.hint) btn.innerHTML += `<span class="hint">${item.hint}</span>`;
+                    btn.onclick = async () => {
+                        if (item.onClick) await item.onClick();
+                        elMenu.close();
+                    };
+                    elMenu.appendChild(btn);
+                    break;
+                }
+                case 'element': {
+                    elMenu.appendChild(item.element);
+                    break;
+                }
+                case 'separator': {
+                    const el = document.createElement('div');
+                    el.classList.add('separator');
+                    elMenu.appendChild(el);
+                    break;
+                }
+            }
+        }
+        elMenu.addEventListener('click', () => {
+            elMenu.close();
+        });
+        elMenu.addEventListener('keydown', (e) => {
+            const items = elMenu.querySelectorAll('button.item:not(:disabled)');
+            let index = [...items].indexOf(document.activeElement);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                index = (index + 1) % items.length;
+                items[index].focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                index = (index - 1 + items.length) % items.length;
+                items[index].focus();
+            }
+        });
+        elMenu.addEventListener('close', () => {
+            if (!elMenu.classList.contains('visible')) return;
+            elMenu.classList.remove('visible');
+            setTimeout(() => {
+                elMenu.remove();
+            }, 300);
+        });
+        document.body.appendChild(elMenu);
+        elMenu.showModal();
+        // Position menu
+        if (shouldPosition) {
+            elMenu.style.transition = 'none';
+            setTimeout(() => {
+                const rect = elMenu.getBoundingClientRect();
+                const menuWidth = rect.width;
+                const menuHeight = elMenu.scrollHeight;
+                const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
+                let x = options.x;
+                let y = options.y;
+                if ((y + menuHeight) > screenHeight) {
+                    y = Math.max(0, (screenHeight - menuHeight - 8));
+                }
+                if ((x + menuWidth) > screenWidth) {
+                    x = Math.max(0, (x - menuWidth));
+                }
+                elMenu.style.left = `${x}px`;
+                elMenu.style.top = `${y}px`;
+                elMenu.style.height = `${menuHeight}px`;
+            }, 10);
+        }
+        // Show menu
+        setTimeout(() => {
+            elMenu.style.transition = '';
+            elMenu.classList.add('visible');
+        }, 50);
+        return elMenu;
+    };
+
     const setColorMode = () => {
         const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
@@ -260,24 +587,166 @@
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
 
     document.addEventListener('DOMContentLoaded', () => {
+
         // Format dates
-        const fileTimes = document.querySelectorAll('.files .entry .modified');
+        const fileTimes = document.querySelectorAll('[data-timestamp]');
         for (const fileTime of fileTimes) {
-            if (fileTime.dataset.value == '-')
+            if (fileTime.dataset.timestamp == '-')
                 continue;
-            const value = parseInt(fileTime.dataset.value);
+            const value = parseInt(fileTime.dataset.timestamp);
             fileTime.title = dayjs(value).format('YYYY-MM-DD HH:mm:ss');
-            fileTime.innerText = dayjs(value).format('<%= data.fileTimeFormat %>');
+            fileTime.innerText = dayjs(value).format(document.body.dataset.fileTimeFormat);
         }
+
         // Format sizes
-        const fileSizes = document.querySelectorAll('.files .entry .size');
+        const fileSizes = document.querySelectorAll('[data-bytes]');
         for (const fileSize of fileSizes) {
-            if (fileSize.dataset.value == '-')
+            if (fileSize.dataset.bytes == '-')
                 continue;
-            const value = parseInt(fileSize.dataset.value);
+            const value = parseInt(fileSize.dataset.bytes);
             fileSize.title = value + ' bytes';
             fileSize.innerText = formatBytes(value);
         }
+
+        // Add context menus to items
+        const entries = document.querySelectorAll('.files .entry');
+        for (const entry of entries) {
+            entry.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const items = [
+                    {
+                        type: 'item',
+                        icon: 'open_in_new',
+                        label: 'Open...',
+                        onClick: () => entry.click()
+                    },
+                    {
+                        type: 'item',
+                        icon: 'open_in_new',
+                        label: 'Open in new tab...',
+                        onClick: () => window.open(entry.href, '_blank')
+                    },
+                    { type: 'separator' }
+                ];
+                const canFoldersDownload = document.body.dataset.canFoldersDownload === 'true';
+                const fileName = entry.querySelector('.name').title;
+                if (entry.dataset.type == 'folder' && canFoldersDownload && fileName !== '..') {
+                    items.push({
+                        type: 'item',
+                        icon: 'download',
+                        label: 'Download folder as zip',
+                        onClick: () => {
+                            window.location.href = entry.href + '?zip=true';
+                        }
+                    });
+                    items.push({ type: 'separator' });
+                } else if (entry.dataset.type != 'folder') {
+                    items.push({
+                        type: 'item',
+                        icon: 'download',
+                        label: 'Download file',
+                        onClick: () => {
+                            const a = document.createElement('a');
+                            a.href = entry.href;
+                            a.download = fileName;
+                            a.click();
+                        }
+                    });
+                    items.push({ type: 'separator' });
+                }
+                items.push({
+                    type: 'item',
+                    icon: 'link',
+                    label: 'Copy link',
+                    onClick: () => {
+                        navigator.clipboard.writeText(entry.href);
+                    }
+                });
+                showContextMenu({ items });
+            });
+        }
+
+        // Add button listeners
+        const btnShareDir = document.getElementById('btnShareDir');
+        if (btnShareDir) {
+            btnShareDir.addEventListener('click', () => {
+                const urlWithoutQuery = window.location.origin + window.location.pathname;
+                navigator.clipboard.writeText(urlWithoutQuery);
+            });
+        }
+        const btnSort = document.getElementById('btnSort');
+        if (btnSort) {
+            btnSort.addEventListener('click', () => {
+                const url = new URL(window.location.href);
+                const currentSortType = url.searchParams.get('sortType') || 'name';
+                const currentSortOrder = url.searchParams.get('sortOrder') || 'asc';
+                const currentSort = `${currentSortType}-${currentSortOrder}`;
+                const items = [
+                    {
+                        type: 'item',
+                        label: 'Sort by name A-Z',
+                        icon: currentSort == 'name-asc' ? 'radio_button_checked' : 'radio_button_unchecked',
+                        onClick: () => {
+                            url.searchParams.delete('sortType');
+                            url.searchParams.delete('sortOrder');
+                            window.location.href = url.toString();
+                        }
+                    },
+                    {
+                        type: 'item',
+                        label: 'Sort by name Z-A',
+                        icon: currentSort == 'name-desc' ? 'radio_button_checked' : 'radio_button_unchecked',
+                        onClick: () => {
+                            url.searchParams.delete('sortType');
+                            url.searchParams.set('sortOrder', 'desc');
+                            window.location.href = url.toString();
+                        }
+                    },
+                    {
+                        type: 'item',
+                        label: 'Sort oldest to newest',
+                        icon: currentSort == 'modified-asc' ? 'radio_button_checked' : 'radio_button_unchecked',
+                        onClick: () => {
+                            url.searchParams.set('sortType', 'modified');
+                            url.searchParams.delete('sortOrder');
+                            window.location.href = url.toString();
+                        }
+                    },
+                    {
+                        type: 'item',
+                        label: 'Sort newest to oldest',
+                        icon: currentSort == 'modified-desc' ? 'radio_button_checked' : 'radio_button_unchecked',
+                        onClick: () => {
+                            url.searchParams.set('sortType', 'modified');
+                            url.searchParams.set('sortOrder', 'desc');
+                            window.location.href = url.toString();
+                        }
+                    },
+                    {
+                        type: 'item',
+                        label: 'Sort smallest to largest',
+                        icon: currentSort == 'size-asc' ? 'radio_button_checked' : 'radio_button_unchecked',
+                        onClick: () => {
+                            url.searchParams.set('sortType', 'size');
+                            url.searchParams.delete('sortOrder');
+                            window.location.href = url.toString();
+                        }
+                    },
+                    {
+                        type: 'item',
+                        label: 'Sort largest to smallest',
+                        icon: currentSort == 'size-desc' ? 'radio_button_checked' : 'radio_button_unchecked',
+                        onClick: () => {
+                            url.searchParams.set('sortType', 'size');
+                            url.searchParams.set('sortOrder', 'desc');
+                            window.location.href = url.toString();
+                        }
+                    }
+                ];
+                showContextMenu({ items });
+            });
+        }
+
     });
 
 </script>
