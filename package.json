@@ -1,6 +1,6 @@
 {
   "name": "express-file-index",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple file index middleware for Express.",
   "license": "ISC",
   "author": "CyberGen49",
