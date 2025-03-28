@@ -2,6 +2,8 @@
 
 `express-file-index` is an Express middleware that serves static files and provides a navigable file index for directories. It's designed to be lightweight, customizable, and easy to integrate into existing Express apps.
 
+![Screenshot of both themes](./promo.png)
+
 ## Features
 
 - **Static File Serving**: Serves files directly from the specified root directory.
