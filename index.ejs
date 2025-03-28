@@ -85,13 +85,8 @@
         <% if (data.readmeHtml) { %>
             <div id="readme">
                 <div class="top">
-                    <!-- <a href="<%= data.readmePath %>" class="btn secondary square" title="Open readme...">
-                        <span class="icon">open_in_new</span>
-                    </a> -->
+                    <span class="icon">menu_book</span>
                     <span>README.md</span>
-                    <!-- <button id="collapseReadme" class="btn secondary square">
-                        <span class="icon">keyboard_arrow_down</span>
-                    </button> -->
                 </div>
                 <div class="body">
                     <%- data.readmeHtml %>
@@ -109,26 +104,27 @@
 
     /* Dark colors */
     body[data-color-mode='dark'] {
-        --c-bg: hsl(0, 0%, 15%);
-        --c-readme-bg: hsl(0, 0%, 13%);
+        --c-bg: hsl(0, 0%, 10%);
+        --c-readme-bg: hsl(0, 0%, 12%);
         --c-text-normal: white;
-        --c-text-secondary: hsl(0, 0%, 75%);
-        --c-text-muted: hsl(0, 0%, 65%);
+        --c-text-secondary: hsl(0, 0%, 70%);
+        --c-text-muted: hsl(0, 0%, 60%);
         --c-border: hsl(0, 0%, 25%);
-        --c-bg-entry-hover: hsl(0, 0%, 20%);
+        --c-bg-entry-hover: hsl(0, 0%, 15%);
         --c-btn-primary-bg: hsl(0, 0%, 100%);
         --c-btn-primary-bg-hover: hsl(0, 0%, 90%);
         --c-btn-primary-border-hover: hsl(0, 0%, 100%);
         --c-btn-primary-text: black;
-        --c-btn-secondary-bg: hsl(0, 0%, 25%);
-        --c-btn-secondary-bg-hover: hsl(0, 0%, 35%);
-        --c-btn-secondary-border-hover: hsl(0, 0%, 45%);
+        --c-btn-secondary-bg: hsl(0, 0%, 20%);
+        --c-btn-secondary-bg-hover: hsl(0, 0%, 30%);
+        --c-btn-secondary-border-hover: hsl(0, 0%, 40%);
         --c-btn-secondary-text: white;
-        --c-contextmenu-bg: hsl(0, 0%, 20%);
-        --c-contextmenu-border: hsl(0, 0%, 30%);
+        --c-contextmenu-bg: hsl(0, 0%, 15%);
+        --c-contextmenu-border: hsl(0, 0%, 25%);
         --c-contextmenu-item-text: hsl(0, 0%, 80%);
         --c-contextmenu-item-bg-hover: hsl(0, 0%, 25%);
         --c-contextmenu-item-border-hover: hsl(0, 0%, 35%);
+        --c-table-header-bg: hsl(0, 0%, 18%);
     }
 
     /* Light colors */
@@ -177,8 +173,10 @@
 
     h1, h2, h3, h4, h5, h6 {
         font-weight: bold;
-        margin: 1em 0px 0.4em 0px;
+        margin: 1em 0px 0.6em 0px;
         padding-bottom: 0.2em;
+    }
+    h1, h2 {
         border-bottom: 1px solid var(--c-border);
     }
     h1 { font-size: 28px }
@@ -213,7 +211,7 @@
     }
 
     pre {
-        padding: 8px 12px;
+        padding: 12px;
         border-radius: 8px;
         border: 1px solid var(--c-border);
     }
@@ -233,6 +231,23 @@
         border-radius: 4px;
     }
 
+    img {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+
+    table {
+        border-collapse: collapse;
+    }
+    th {
+        background: var(--c-table-header-bg);
+    }
+    th, td {
+        border: 1px solid var(--c-border);
+        padding: 8px 12px;
+        line-height: 1.4;
+    }
+
     .container {
         margin: 0px auto;
         padding: 24px 16px;
@@ -248,12 +263,19 @@
     }
     #readme .top {
         display: flex;
-        padding: 12px 16px;
+        padding: 8px 16px;
         align-items: center;
         border: 1px solid var(--c-border);
-        gap: 8px;
+        gap: 12px;
         border-radius: 0px 0px 16px 16px;
         margin: -1px;
+    }
+    #readme .top .icon {
+        font-size: 24px;
+        font-family: 'Material Symbols Outlined';
+        color: var(--c-text-muted);
+        flex-shrink: 0;
+        user-select: none;
     }
     #readme .body {
         padding: 16px;
@@ -327,7 +349,6 @@
         border-radius: 16px;
         box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
         z-index: 100;
-        transition: 0.1s ease-in-out;
         scrollbar-width: none;
     }
     .contextMenu::backdrop {
@@ -440,6 +461,7 @@
         height: 36px;
         border-radius: 8px;
         border: 1px solid transparent;
+        user-select: none;
     }
     .files .entry:hover {
         background: var(--c-bg-entry-hover);

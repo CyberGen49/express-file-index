@@ -8,6 +8,7 @@
         ".css",
         ".js",
         ".jsx",
+        ".ejs",
         ".ts",
         ".tsx",
         ".java",
