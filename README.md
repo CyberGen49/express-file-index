@@ -71,6 +71,7 @@ You can customize the file index UI by providing your own EJS template file via 
 - `ancestors`: An array of parent directories., each with `name` and `path` properties.
 - `dir`: An object describing the current directory, with the same format as an `ancestors` item.
 - `files`: A sorted array of files and directories in the current directory. Each entry contains `name`, `path`, `isDirectory`, `size` (bytes), `modified` (ms timestamp), `type` (one of file, folder, text, image, audio, video, compressed, software), and `icon` (Google Material Symbol icon name) properties.
+- `readmeHtml`: An HTML string parsed from the readme file, if one exists. `null` otherwise.
 - `readmeFilePath`: The path to the readme.md file in the current directory if one exists. `null` otherwise.
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
@@ -79,6 +80,7 @@ You can customize the file index UI by providing your own EJS template file via 
 - `nodejsVersion`: The Node.js version.
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.
+- `renderStartTime`: A millisecond timestamp representing the time the request was received.
 
 ## README.md Display
 

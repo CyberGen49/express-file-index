@@ -77,6 +77,7 @@ const defaultOpts = {
 module.exports = (options = {}) => async (req, res, next) => {
 
     // Get paths and options
+    const renderStartTime = Date.now();
     const pathRoot = path.resolve(options.rootDir || defaultOpts.rootDir);
     const pathRel = path.normalize(decodeURI(req.path));
     const pathAbs = path.normalize(path.join(pathRoot, pathRel));
@@ -150,8 +151,8 @@ module.exports = (options = {}) => async (req, res, next) => {
         const fileNames = await fs.readdir(pathAbs);
         const filesOnly = [];
         const dirsOnly = [];
-        let readmeHtml;
-        let readmePath;
+        let readmeHtml = null;
+        let readmePath = null;
         for (const fileName of fileNames) {
 
             // Skip if the file is hidden
@@ -283,7 +284,8 @@ module.exports = (options = {}) => async (req, res, next) => {
                 readmePath,
                 nodejsVersion: process.version,
                 osPlatform: process.platform,
-                osArch: process.arch
+                osArch: process.arch,
+                renderStartTime
             }
         });
 
