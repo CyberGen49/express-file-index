@@ -79,7 +79,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     // Get paths and options
     const renderStartTime = Date.now();
     const pathRoot = path.resolve(options.rootDir || defaultOpts.rootDir);
-    const pathRel = path.normalize(decodeURI(req.path));
+    const pathRel = path.normalize('/' + decodeURI(req.path));
     const pathAbs = path.normalize(path.join(pathRoot, pathRel));
     const serverName = options.serverName || req.hostname || 'server';
     const hiddenFilePrefixes = options.hiddenFilePrefixes || defaultOpts.hiddenFilePrefixes;
@@ -100,6 +100,21 @@ module.exports = (options = {}) => async (req, res, next) => {
     // Check if the request is a file or directory
     const stats = await fs.stat(pathAbs);
     if (stats.isDirectory()) {
+
+        // Handle asset requests
+        const asset = req.query.asset;
+        if (asset) {
+            const assetsDir = path.join(__dirname, 'assets');
+            const assetPathRel = path.normalize('/' + decodeURI(asset));
+            const assetPathAbs = path.join(assetsDir, assetPathRel);
+            try {
+                await fs.access(assetPathAbs);
+                const assetStats = await fs.stat(assetPathAbs);
+                if (assetStats.isFile()) {
+                    return res.sendFile(assetPathAbs);
+                }
+            } catch (error) {}
+        }
 
         // Zip and send if requested and enabled
         if (req.query.zip && allowZipDownloads) {
@@ -245,6 +260,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         }
 
         // Add parent directory
+        console.log(pathRel);
         if (pathRel !== '/') {
             dirsOnly.unshift({
                 name: '..',
