@@ -1,13 +1,29 @@
 {
   "name": "express-file-index",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "A simple file index middleware for Express.",
+  "keywords": [
+    "express",
+    "readme",
+    "file-index",
+    "index",
+    "file-sharing"
+  ],
+  "homepage": "https://github.com/CyberGen49/express-file-index#readme",
+  "bugs": {
+    "url": "https://github.com/CyberGen49/express-file-index/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CyberGen49/express-file-index.git"
+  },
   "license": "ISC",
   "author": "CyberGen49",
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
@@ -16,5 +32,6 @@
     "express": "^4.21.2",
     "jsdom": "^26.0.0",
     "marked": "^15.0.7"
-  }
+  },
+  "devDependencies": {}
 }
