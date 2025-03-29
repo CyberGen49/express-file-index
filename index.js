@@ -260,7 +260,6 @@ module.exports = (options = {}) => async (req, res, next) => {
         }
 
         // Add parent directory
-        console.log(pathRel);
         if (pathRel !== '/') {
             dirsOnly.unshift({
                 name: '..',
