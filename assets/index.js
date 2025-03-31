@@ -1,28 +1,21 @@
 const roundSmart = (num) => {
-    const wholePart = Math.floor(num);
-    let roundedNum;
-
-    if (wholePart >= 100) {
-        roundedNum = num.toFixed(0);
-    } else if (wholePart >= 10) {
-        roundedNum = num.toFixed(1);
-    } else {
-        roundedNum = num.toFixed(2);
-    }
-
-    return parseFloat(roundedNum);
+    if (num < 1)
+        return parseFloat(num.toFixed(3));
+    if (num < 10)
+        return parseFloat(num.toFixed(2));
+    if (num < 100)
+        return parseFloat(num.toFixed(1));
+    return parseFloat(num.toFixed(0));
 };
 
 const formatBytes = bytes => {
-    if (bytes < 1024)
-        return bytes + ' B';
-    if (bytes < 1024 * 1024)
-        return roundSmart(bytes / 1024) + ' KiB';
-    if (bytes < 1024 * 1024 * 1024)
-        return roundSmart(bytes / 1024 / 1024) + ' MiB';
-    if (bytes < 1024 * 1024 * 1024 * 1024)
-        return roundSmart(bytes / 1024 / 1024 / 1024) + ' GiB';
-    return roundSmart(bytes / 1024 / 1024 / 1024 / 1024) + ' TiB';
+    const units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB' ];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        i++;
+    }
+    return `${roundSmart(bytes)} ${units[i]}`;
 };
 
 const mouse = { x: 0, y: 0 };

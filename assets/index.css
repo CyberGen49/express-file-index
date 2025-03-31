@@ -359,7 +359,8 @@ th, td {
     border: 1px solid transparent;
     user-select: none;
 }
-.files .entry:hover {
+.files .entry:hover,
+.files .entry:focus-visible {
     background: var(--c-bg-entry-hover);
     border: 1px solid var(--c-border);
     color: var(--c-text-normal);

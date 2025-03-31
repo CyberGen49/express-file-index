@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index of <%= data.dir.name %></title>
+    <title><%= data.dir.name %></title>
     <meta property="og:site_name" content="<%= data.serverName %>" />
-    <meta property="og:title" content="Index of <%= data.dir.name %>" />
+    <meta property="og:title" content="<%= data.dir.name %>" />
     <meta name="theme-color" content="">
     <link rel="icon" href="">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js" defer></script>
     <script src="?asset=index.js" defer></script>
 </head>
-<body data-color-mode="light" data-can-folders-download="<%= data.allowZipDownloads %>" data-file-time-format="<%= data.fileTimeFormat %>">
+<body data-color-mode="dark" data-can-folders-download="<%= data.allowZipDownloads %>" data-file-time-format="<%= data.fileTimeFormat %>">
     <div class="container">
         <div class="header">
             <% if (data.ancestors.length) { %>
