@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add context menus to items
     const entries = document.querySelectorAll('.files .entry');
     for (const entry of entries) {
+        const data = JSON.parse(entry.dataset.json);
         entry.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const items = [
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             const canFoldersDownload = document.body.dataset.canFoldersDownload === 'true';
             const fileName = entry.querySelector('.name').title;
-            if (entry.dataset.type == 'folder' && canFoldersDownload && fileName !== '..') {
+            if (data.type == 'folder' && canFoldersDownload && fileName !== '..') {
                 items.push({
                     type: 'item',
                     icon: 'download',
@@ -52,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 items.push({ type: 'separator' });
-            } else if (entry.dataset.type != 'folder') {
+            } else if (data.type != 'folder') {
                 items.push({
                     type: 'item',
                     icon: 'download',
