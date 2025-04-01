@@ -58,6 +58,8 @@ The middleware accepts an options object to customize its behavior. Below are th
 | `hiddenFilePrefixes` | `string[]` | `[ '.', '_' ]`        | File prefixes to hide from the file index.                                 |
 | `indexFiles`         | `string[]` | `[ 'index.html' ]`    | Files to serve on directory requests instead of the file index.            |
 | `statDirs`           | `boolean`  | `false`               | Whether to recursively calculate directory sizes and modification times.   |
+| `handle404`          | `boolean`  | `false`               | Whether to handle 404 errors by displaying a custom error page.            |
+| `handle404Document`  | `string`   | Built-in error page   | Path to a custom 404 error page to display when `handle404` is enabled.    |
 | `allowZipDownloads`  | `boolean`  | `false`               | Whether to allow downloading directories as zip archives.                  |
 | `ejsFilePath`        | `string`   | Built-in template     | Path to a custom EJS template for the file index.                          |
 | `fileTimeFormat`     | `string`   | `'MMM D, YYYY'`       | Format for displayed file modification times (uses Day.js format).         |

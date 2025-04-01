@@ -28,6 +28,14 @@ const { JSDOM } = require('jsdom');
  * This will slow index loading if you have lots of files and/or slow storage.
  * 
  * Defaults to `false`.
+ * @property {boolean} handle404 Whether to handle 404 errors by displaying a custom error page.
+ * 
+ * When set to `false`, `next()` will be called, passing the request to the next middleware.
+ * 
+ * Defaults to `false`.
+ * @property {string} handle404Document The path to a custom 404 error page.
+ * 
+ * Defaults to the built-in error page matching the style of the file index.
  * @property {boolean} allowZipDownloads Whether to allow downloading directories as zip archives.
  * 
  * When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are generated and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
@@ -63,6 +71,8 @@ const defaultOpts = {
     hiddenFilePrefixes: [ '.', '_' ],
     indexFiles: [ 'index.html' ],
     statDirs: false,
+    handle404: false,
+    handle404Document: path.join(__dirname, '404.html'),
     allowZipDownloads: false,
     ejsFilePath: path.join(__dirname, 'index.ejs'),
     fileTimeFormat: 'MMM D, YYYY',
@@ -84,37 +94,44 @@ module.exports = (options = {}) => async (req, res, next) => {
     const serverName = options.serverName || req.hostname || 'server';
     const hiddenFilePrefixes = options.hiddenFilePrefixes || defaultOpts.hiddenFilePrefixes;
     const indexFiles = options.indexFiles || defaultOpts.indexFiles;
+    const handle404s = options.handle404 || defaultOpts.handle404;
+    const handle404Document = options.handle404Document || defaultOpts.handle404Document;
     const statDirs = options.statDirs || defaultOpts.statDirs;
     const allowZipDownloads = options.allowZipDownloads || defaultOpts.allowZipDownloads;
     const ejsFilePath = options.ejsFilePath || defaultOpts.ejsFilePath;
     const fileTimeFormat = options.fileTimeFormat || defaultOpts.fileTimeFormat;
     const enableReadmes = options.enableReadmes || defaultOpts.enableReadmes;
 
+    // Handle asset requests
+    const asset = req.query.expressFileIndexAsset;
+    if (asset) {
+        const assetsDir = path.join(__dirname, 'assets');
+        const assetPathRel = path.normalize('/' + decodeURI(asset));
+        const assetPathAbs = path.join(assetsDir, assetPathRel);
+        try {
+            await fs.access(assetPathAbs);
+            const assetStats = await fs.stat(assetPathAbs);
+            if (assetStats.isFile()) {
+                return res.sendFile(assetPathAbs);
+            }
+        } catch (error) {}
+    }
+
     // Make sure the file exists
     try {
         await fs.access(pathAbs);
     } catch {
-        return next();
+        // Handle error 404 if enabled
+        if (handle404s) {
+            return res.status(404).sendFile(handle404Document);
+        } else {
+            return next();
+        }
     }
 
     // Check if the request is a file or directory
     const stats = await fs.stat(pathAbs);
     if (stats.isDirectory()) {
-
-        // Handle asset requests
-        const asset = req.query.asset;
-        if (asset) {
-            const assetsDir = path.join(__dirname, 'assets');
-            const assetPathRel = path.normalize('/' + decodeURI(asset));
-            const assetPathAbs = path.join(assetsDir, assetPathRel);
-            try {
-                await fs.access(assetPathAbs);
-                const assetStats = await fs.stat(assetPathAbs);
-                if (assetStats.isFile()) {
-                    return res.sendFile(assetPathAbs);
-                }
-            } catch (error) {}
-        }
 
         // Zip and send if requested and enabled
         if (req.query.zip && allowZipDownloads) {
