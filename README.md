@@ -64,6 +64,7 @@ The middleware accepts an options object to customize its behavior. Below are th
 | `ejsFilePath`        | `string`   | Built-in template     | Path to a custom EJS template for the file index.                          |
 | `fileTimeFormat`     | `string`   | `'MMM D, YYYY'`       | Format for displayed file modification times (uses Day.js format).         |
 | `enableReadmes`      | `boolean`  | `true`                | Whether to parse and display README.md files in the file index.            |
+| `enableLogging`      | `boolean`  | `false`               | Whether debug/activity logs should be printed to the console.            |
 
 ## Customization
 

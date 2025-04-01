@@ -36,9 +36,9 @@ const { JSDOM } = require('jsdom');
  * @property {string} handle404Document The path to a custom 404 error page.
  * 
  * Defaults to the built-in error page matching the style of the file index.
- * @property {boolean} allowZipDownloads Whether to allow downloading directories as zip archives.
+ * @property {boolean} allowZipDownloads Whether to allow downloading directories as (uncompressed) zip archives.
  * 
- * When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are generated and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
+ * When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are built and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
  * 
  * Defaults to `false`.
  * @property {string[]} ejsFilePath The path to an EJS template file to use for the file index. 
@@ -52,6 +52,9 @@ const { JSDOM } = require('jsdom');
  * @property {string} enableReadmes Whether readme.md files should be parsed and displayed in the file index.
  * 
  * Defaults to `true`.
+ * @property {boolean} enableLogging Whether debug/activity logs should be printed to the console.
+ * 
+ * Defaults to `false`.
  */
 
 const window = new JSDOM('').window;
@@ -76,7 +79,8 @@ const defaultOpts = {
     allowZipDownloads: false,
     ejsFilePath: path.join(__dirname, 'index.ejs'),
     fileTimeFormat: 'MMM D, YYYY',
-    enableReadmes: true
+    enableReadmes: true,
+    enableLogging: false
 };
 
 /**
@@ -101,6 +105,14 @@ module.exports = (options = {}) => async (req, res, next) => {
     const ejsFilePath = options.ejsFilePath || defaultOpts.ejsFilePath;
     const fileTimeFormat = options.fileTimeFormat || defaultOpts.fileTimeFormat;
     const enableReadmes = options.enableReadmes || defaultOpts.enableReadmes;
+    const enableLogging = options.enableLogging || defaultOpts.enableLogging;
+
+    // Logging function
+    const log = (message) => {
+        if (!enableLogging) return;
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        console.log(`[${ip}] ${message}`);
+    }
 
     // Handle asset requests
     const asset = req.query.expressFileIndexAsset;
@@ -112,6 +124,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             await fs.access(assetPathAbs);
             const assetStats = await fs.stat(assetPathAbs);
             if (assetStats.isFile()) {
+                log(`Requested built-in asset: ${assetPathAbs}`);
                 return res.sendFile(assetPathAbs);
             }
         } catch (error) {}
@@ -123,6 +136,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     } catch {
         // Handle error 404 if enabled
         if (handle404s) {
+            log(`Handling 404 for file: ${pathAbs}`);
             return res.status(404).sendFile(handle404Document);
         } else {
             return next();
@@ -135,12 +149,10 @@ module.exports = (options = {}) => async (req, res, next) => {
 
         // Zip and send if requested and enabled
         if (req.query.zip && allowZipDownloads) {
-            const zipFileName = path.basename(pathAbs) + '.zip';
-            res.attachment(zipFileName);
-            // Create archive and recursively pipe files to response
-            const archive = archiver('zip', { zlib: { level: 9 } });
-            archive.on('error', (err) => res.status(500).send({ error: err.message }));
-            archive.pipe(res);
+            log(`Requested zip download of directory: ${pathAbs}`);
+            // Process files recursively
+            const entryArgs = [];
+            let size = 0;
             const recurse = async (dirPath) => {
                 const fileNames = await fs.readdir(dirPath);
                 for (const fileName of fileNames) {
@@ -150,20 +162,40 @@ module.exports = (options = {}) => async (req, res, next) => {
                     const filePathRel = path.relative(pathAbs, filePathAbs);
                     const stats = await fs.stat(filePathAbs);
                     if (stats.isDirectory()) {
-                        recurse(filePathAbs);
                         await recurse(filePathAbs);
                     } else {
-                        archive.file(filePathAbs, { name: filePathRel });
+                        entryArgs.push([ filePathAbs, { name: filePathRel } ]);
+                        size += stats.size;
                     }
                 }
             };
             await recurse(pathAbs);
+            // Communicate to the client
+            const zipFileName = path.basename(pathAbs) + '.zip';
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', `attachment; filename="${zipFileName}"`);
+            res.setHeader('Content-Length', size);
+            // Create archive and pipe files to response
+            const archive = archiver('zip', {
+                zlib: { level: 0 } // No compression
+            });
+            archive.on('error', (err) => res.status(500).send({ error: err.message }));
+            archive.on('entry', entry => {
+                log(`Added file to zip: ${entry.name}`);
+            })
+            archive.on('close', entry => {
+                log(`Finished zip download of directory: ${pathAbs}`);
+            })
+            archive.pipe(res);
+            for (const args of entryArgs) {
+                archive.file(...args);
+            }
             archive.finalize();
             // Clean up on user disconnect
             req.on('close', () => {
-                if (res.headersSent) {
-                    archive.abort();
-                }
+                if (archive.closed) return;
+                log(`Aborted zip download of directory: ${pathAbs}`);
+                archive.abort();
             });
             return;
         }
@@ -173,6 +205,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             const pathIndexFile = path.join(pathAbs, name);
             try {
                 await fs.access(pathIndexFile);
+                log(`Requested index file: ${pathIndexFile}`);
                 return res.sendFile(pathIndexFile);
             } catch {
                 // Continue to the next index file
@@ -225,6 +258,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             // Process readme if enabled
             const fileNameLower = fileName.toLowerCase();
             if (!isDirectory && enableReadmes && fileNameLower === 'readme.md' && !readmeHtml) {
+                log(`Processing readme file: ${filePathAbs}`);
                 const md = await fs.readFile(filePathAbs, 'utf8');
                 readmeHtml = mdToHtml(md);
                 readmePath = filePathRel;
@@ -258,6 +292,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             });
 
         }
+        log(`Read directory containing ${dirsOnly.length} subdirs and ${filesOnly.length} files: ${pathAbs}`);
 
         // Sort and combine files
         const sortType = req.query.sortType || 'name';
@@ -302,6 +337,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         }
 
         // Render index
+        log(`Rendering file index for directory: ${pathAbs}`);
         const html = await ejs.renderFile(ejsFilePath, {
             data: {
                 serverName,
@@ -328,6 +364,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     } else {
 
         // Serve static file
+        log(`Requested static file: ${pathAbs}`);
         return res.sendFile(pathAbs);
 
     }
