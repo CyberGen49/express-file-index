@@ -1,3 +1,13 @@
+body[data-color-mode='dark'] {
+    --c-readme-bg: hsl(0, 0%, 12%);
+    --c-bg-entry-hover: hsl(0, 0%, 15%);
+}
+
+body[data-color-mode='light'] {
+    --c-readme-bg: hsl(0, 0%, 97%);
+    --c-bg-entry-hover: hsl(0, 0%, 92%);
+}
+
 .header {
     margin-bottom: 24px;
 }
@@ -150,6 +160,39 @@
     color: var(--c-text-secondary);
 }
 
+#readme {
+    margin: 16px -8px 0px -8px;
+    border-radius: 16px;
+    background: var(--c-readme-bg);
+    border: 1px solid var(--c-border);
+    overflow: hidden;
+}
+#readme .top {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    border: 1px solid var(--c-border);
+    gap: 12px;
+    border-radius: 0px 0px 16px 16px;
+    margin: -1px;
+}
+#readme .top .icon {
+    font-size: 24px;
+    font-family: 'Material Symbols Outlined';
+    color: var(--c-text-muted);
+    flex-shrink: 0;
+    user-select: none;
+}
+#readme .body {
+    padding: 16px;
+}
+#readme .body > *:first-child {
+    margin-top: 0px;
+}
+#readme .body > *:last-child {
+    margin-bottom: 0px;
+}
+
 .footer {
     font-size: 12px;
     color: var(--c-text-muted);
@@ -163,7 +206,7 @@
         padding: 24px 8px;
     }
 
-    .colHeaders *,
+    .colHeaders,
     .files .entry .modified,
     .files .entry .size {
         display: none;

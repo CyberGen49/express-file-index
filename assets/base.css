@@ -1,12 +1,10 @@
 /* Dark colors */
 body[data-color-mode='dark'] {
     --c-bg: hsl(0, 0%, 10%);
-    --c-readme-bg: hsl(0, 0%, 12%);
     --c-text-normal: white;
     --c-text-secondary: hsl(0, 0%, 70%);
     --c-text-muted: hsl(0, 0%, 60%);
     --c-border: hsl(0, 0%, 25%);
-    --c-bg-entry-hover: hsl(0, 0%, 15%);
     --c-btn-primary-bg: hsl(0, 0%, 100%);
     --c-btn-primary-bg-hover: hsl(0, 0%, 90%);
     --c-btn-primary-border-hover: hsl(0, 0%, 100%);
@@ -26,12 +24,10 @@ body[data-color-mode='dark'] {
 /* Light colors */
 body[data-color-mode='light'] {
     --c-bg: hsl(0, 0%, 95%);
-    --c-readme-bg: hsl(0, 0%, 97%);
     --c-text-normal: hsl(0, 0%, 0%);
     --c-text-secondary: hsl(0, 0%, 30%);
     --c-text-muted: hsl(0, 0%, 50%);
     --c-border: hsl(0, 0%, 80%);
-    --c-bg-entry-hover: hsl(0, 0%, 92%);
     --c-btn-primary-bg: hsl(0, 0%, 0%);
     --c-btn-primary-bg-hover: hsl(0, 0%, 30%);
     --c-btn-primary-border-hover: hsl(0, 0%, 0%);
@@ -148,39 +144,6 @@ th, td {
     margin: 0px auto;
     padding: 24px 16px;
     max-width: 1000px;
-}
-
-#readme {
-    margin: 16px -8px 0px -8px;
-    border-radius: 16px;
-    background: var(--c-readme-bg);
-    border: 1px solid var(--c-border);
-    overflow: hidden;
-}
-#readme .top {
-    display: flex;
-    padding: 8px 16px;
-    align-items: center;
-    border: 1px solid var(--c-border);
-    gap: 12px;
-    border-radius: 0px 0px 16px 16px;
-    margin: -1px;
-}
-#readme .top .icon {
-    font-size: 24px;
-    font-family: 'Material Symbols Outlined';
-    color: var(--c-text-muted);
-    flex-shrink: 0;
-    user-select: none;
-}
-#readme .body {
-    padding: 16px;
-}
-#readme .body > *:first-child {
-    margin-top: 0px;
-}
-#readme .body > *:last-child {
-    margin-bottom: 0px;
 }
 
 .btn {
