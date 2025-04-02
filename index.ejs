@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= data.dir.name %></title>
-    <meta property="og:site_name" content="<%= data.serverName %>" />
+    <% if (data.ancestors.length) { %>
+        <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
+    <% } else { %>
+        <meta property="og:site_name" content="<%= data.serverName %>" />
+    <% } %>
     <meta property="og:title" content="<%= data.dir.name %>" />
     <meta name="theme-color" content="">
     <link rel="icon" href="">

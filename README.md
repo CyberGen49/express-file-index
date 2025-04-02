@@ -14,6 +14,7 @@
 - **Zip Downloads**: Optionally allow downloading directories as zip archives.
 - **Recursive Directory Stats**: Calculate accurate sizes and modification times for directories.
 - **Readme Display**: Parse and display README.md files in directories.
+- **Clean URL Aliases**: Allow accessing files and directories with clean aliases in addition to their normal names.
 
 ## Installation
 
@@ -51,19 +52,86 @@ The middleware accepts an options object to customize its behavior. Below are th
 
 ### Options
 
-| Option               | Type       | Default Value | Description                                                                 |
-|----------------------|------------|-----------------------|-----------------------------------------------------------------------------|
-| `rootDir`            | `string`   | `'./'`                | The root directory of the file index.                                      |
-| `serverName`         | `string`   | Hostname of the server| The name to use for the root directory in the file index.                  |
-| `hiddenFilePrefixes` | `string[]` | `[ '.', '_' ]`        | File prefixes to hide from the file index.                                 |
-| `indexFiles`         | `string[]` | `[ 'index.html' ]`    | Files to serve on directory requests instead of the file index.            |
-| `statDirs`           | `boolean`  | `false`               | Whether to recursively calculate directory sizes and modification times.   |
-| `handle404`          | `boolean`  | `false`               | Whether to handle 404 errors by displaying a custom error page.            |
-| `handle404Document`  | `string`   | Built-in error page   | Path to a custom 404 error page to display when `handle404` is enabled.    |
-| `allowZipDownloads`  | `boolean`  | `false`               | Whether to allow downloading directories as zip archives.                  |
-| `ejsFilePath`        | `string`   | Built-in template     | Path to a custom EJS template for the file index.                          |
-| `fileTimeFormat`     | `string`   | `'MMM D, YYYY'`       | Format for displayed file modification times (uses Day.js format).         |
-| `enableLogging`      | `boolean`  | `false`               | Whether debug/activity logs should be printed to the console.            |
+- `string` `rootDir`:  
+  The root directory of the file index.
+
+  Defaults to `./`.
+
+- `string` `serverName`:  
+  The name to use for the root directory in the file index.
+
+  Defaults to the hostname of the server.
+
+- `string[]` `hiddenFilePrefixes`:  
+  A list of file prefixes that should be hidden from the file index.
+
+  **IMPORTANT:** This option DOES NOT block access to these files; it only hides them from view in the index. They are still downloadable by path.
+
+  Defaults to `[ '.', '_' ]`.
+
+- `string[]` `indexFiles`:  
+  A list of file names that should be sent on directory requests instead of the file index.
+
+  Defaults to `[ 'index.html' ]`.
+
+- `boolean` `statDirs`:  
+  Whether to recursively process directories to calculate accurate sizes and modification times.
+
+  This will slow index loading if you have lots of files and/or slow storage.
+
+  Defaults to `false`.
+
+- `boolean` `handle404`:  
+  Whether to handle 404 errors by displaying a custom error page.
+
+  When set to `false`, `next()` will be called, passing the request to the next middleware.
+
+  Defaults to `false`.
+
+- `string` `handle404Document`:  
+  The path to a custom 404 error page.
+
+  Defaults to the built-in error page matching the style of the file index.
+
+- `boolean` `allowZipDownloads`:  
+  Whether to allow downloading directories as (uncompressed) zip archives.
+
+  When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are built and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
+
+  Defaults to `false`.
+
+- `boolean` `allowCleanPathAliases`:  
+  Whether to allow clean aliases for files and directories in URLs.
+
+  Clean aliases take the file/directory name, convert it to lowercase, replace spaces with dashes, and remove all characters other than a-z, 0-9, dashes, and underscores.
+
+  This option is useful for making URLs more readable, but may cause conflicts with existing files and directories. If a file or directory exists with the same name as the alias, the file or directory will take priority. When two files have the same alias in the same directory, the alias will not work and the files will need to be accessed by their original names.
+
+  Enabling this option may also impact performance due to the extra processing required to resolve aliases and check for conflicts.
+
+  Defaults to `false`.
+
+- `boolean` `forceCleanPathAliases`:  
+  Whether to force clean path aliases by using them when navigating the file index.  `allowCleanPathAliases` must be `true` for this option to work.
+
+  Defaults to `false`.
+
+- `boolean` `enableLogging`:  
+  Whether debug/activity logs should be printed to the console.
+
+  Defaults to `false`.
+
+- `string[]` `ejsFilePath`:  
+  The path to an EJS template file to use for the file index. 
+
+  This option is not recommended for most use cases, but can be used to develop your own file index UI. See the project readme for details.
+
+  Defaults to the built-in template.
+
+- `string` `fileTimeFormat`:  
+  A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
+
+  Defaults to `'MMM D, YYYY'`.
 
 ## Customization
 
@@ -72,7 +140,16 @@ You can customize the file index UI by providing your own EJS template file via 
 - `serverName`: The name of the server.
 - `ancestors`: An array of parent directories., each with `name` and `path` properties.
 - `dir`: An object describing the current directory, with the same format as an `ancestors` item.
-- `files`: A sorted array of files and directories in the current directory. Each entry contains `name`, `path`, `isDirectory`, `size` (bytes), `modified` (ms timestamp), `type` (one of file, folder, text, image, audio, video, compressed, software), and `icon` (Google Material Symbol icon name) properties.
+- `files`: A sorted array of files and directories in the current directory. Each entry contains the following:
+  - `string` `name`: The file name
+  - `string` `path`: If `forceCleanPathAliases` is `true`, this is the file's relative clean alias path. If it's `false`, this is the file's actual relative path.
+  - `string` `pathAlias`: The file's relative clean alias path, or `null` if `forceCleanPathAliases` is `false`
+  - `string` `pathTrue`: The file's actual relative path
+  - `boolean` `isDirectory`: Whether or not the file is a directory
+  - `number|string` `size`: The file's size in bytes, or `'-'` if not applicable
+  - `number` `modified`: The file's millisecond timestamp, or `'-'` if not applicable
+  - `string` `type` One of `'file'`, `'folder'`, `'text'`, `'image'`, `'audio'`, `'video'`, `'compressed'`, `'software'`
+  - `string` `icon` A [Google Material Symbol](https://fonts.google.com/icons) name
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
 - `fileTimeFormat`: The format to use for file modification times.
