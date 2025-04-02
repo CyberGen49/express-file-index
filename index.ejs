@@ -15,6 +15,9 @@
     <link href="?expressFileIndexAsset=base.css" rel="stylesheet">
     <link href="?expressFileIndexAsset=index.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15/lib/marked.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1/dist/axios.min.js" defer></script>
     <script src="?expressFileIndexAsset=base.js" defer></script>
     <script src="?expressFileIndexAsset=index.js" defer></script>
 </head>
@@ -88,17 +91,14 @@
                 <% } %>
             </div>
         </div>
-        <% if (data.readmeHtml) { %>
-            <div id="readme">
-                <div class="top">
-                    <span class="icon">menu_book</span>
-                    <span>README.md</span>
-                </div>
-                <div class="body">
-                    <%- data.readmeHtml %>
-                </div>
+        <div id="readme" style="display: none;">
+            <div class="top">
+                <span class="icon">menu_book</span>
+                <span>README.md</span>
             </div>
-        <% } %>
+            <div class="body">
+            </div>
+        </div>
         <div class="footer">
             Index provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>

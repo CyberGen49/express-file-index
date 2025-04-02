@@ -63,7 +63,6 @@ The middleware accepts an options object to customize its behavior. Below are th
 | `allowZipDownloads`  | `boolean`  | `false`               | Whether to allow downloading directories as zip archives.                  |
 | `ejsFilePath`        | `string`   | Built-in template     | Path to a custom EJS template for the file index.                          |
 | `fileTimeFormat`     | `string`   | `'MMM D, YYYY'`       | Format for displayed file modification times (uses Day.js format).         |
-| `enableReadmes`      | `boolean`  | `true`                | Whether to parse and display README.md files in the file index.            |
 | `enableLogging`      | `boolean`  | `false`               | Whether debug/activity logs should be printed to the console.            |
 
 ## Customization
@@ -74,8 +73,6 @@ You can customize the file index UI by providing your own EJS template file via 
 - `ancestors`: An array of parent directories., each with `name` and `path` properties.
 - `dir`: An object describing the current directory, with the same format as an `ancestors` item.
 - `files`: A sorted array of files and directories in the current directory. Each entry contains `name`, `path`, `isDirectory`, `size` (bytes), `modified` (ms timestamp), `type` (one of file, folder, text, image, audio, video, compressed, software), and `icon` (Google Material Symbol icon name) properties.
-- `readmeHtml`: An HTML string parsed from the readme file, if one exists. `null` otherwise.
-- `readmeFilePath`: The path to the readme.md file in the current directory if one exists. `null` otherwise.
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
 - `fileTimeFormat`: The format to use for file modification times.
@@ -84,21 +81,3 @@ You can customize the file index UI by providing your own EJS template file via 
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.
 - `renderStartTime`: A millisecond timestamp representing the time the request was received.
-
-## README.md Display
-
-If the `enableReadmes` option is set to `true` (default), the middleware will look for a `README.md` file in each directory. If found, it will parse the file as Markdown and display it below the file index. The content is sanitized to prevent XSS attacks.
-
-The following data is available for customizing the README display:
-
-- `readmeHtml`: The sanitized HTML content of the README.md file.
-- `readmeFilePath`: The path to the README.md file, or `null` if none exists.
-
-To disable this feature, set `enableReadmes` to `false` in the options:
-
-```javascript
-app.use(index({
-    rootDir: './public',
-    enableReadmes: false
-}));
-```

@@ -18,6 +18,12 @@ const formatBytes = bytes => {
     return `${roundSmart(bytes)} ${units[i]}`;
 };
 
+// Assuming marked and dompurify are already included in the project
+const markdownToSafeHTML = (markdown) => {
+    const html = marked.parse(markdown);
+    return DOMPurify.sanitize(html);
+}
+
 const mouse = { x: 0, y: 0 };
 document.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;

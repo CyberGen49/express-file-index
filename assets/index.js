@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
     // Format dates
     const fileTimes = document.querySelectorAll('[data-timestamp]');
@@ -20,10 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fileSize.innerText = formatBytes(value);
     }
 
-    // Add context menus to items
-    const entries = document.querySelectorAll('.files .entry');
-    for (const entry of entries) {
+    // Loop through files to add context menus and find readme
+    const fileEntryElements = document.querySelectorAll('.files .entry');
+    let readmePath = null;
+    for (const entry of fileEntryElements) {
         const data = JSON.parse(entry.dataset.json);
+        if (data.name.toLowerCase() == 'readme.md' && !readmePath) {
+            readmePath = data.path;
+        }
         entry.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const items = [
@@ -158,6 +162,18 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
             showContextMenu({ items });
         });
+    }
+
+    // Load readme
+    if (readmePath) {
+        const elReadme = document.querySelector('#readme');
+        const elReadmeBody = document.querySelector('#readme > .body');
+        elReadmeBody.innerHTML = '<p><em>Loading readme...</em></p>';
+        elReadme.style.display = '';
+        const res = await axios.get(readmePath);
+        const markdown = res.data;
+        const html = markdownToSafeHTML(markdown);
+        elReadmeBody.innerHTML = html;
     }
 
 });
