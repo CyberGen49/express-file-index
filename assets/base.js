@@ -124,7 +124,7 @@ const setColorMode = () => {
     }
     const iconMeta = document.querySelector('link[rel="icon"]');
     if (iconMeta) {
-        iconMeta.setAttribute('href', isDarkMode ? '?asset=icon-light.png' : '?asset=icon-dark.png');
+        iconMeta.setAttribute('href', isDarkMode ? '?expressFileIndexAsset=icon-light.png' : '?expressFileIndexAsset=icon-dark.png');
     }
 };
 
