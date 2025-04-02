@@ -50,57 +50,55 @@ app.listen(3000, () => {
 
 The middleware accepts an options object to customize its behavior. Below are the available options:
 
-### Options
-
-#### `string` `rootDir`:  
+###  `string` `rootDir`  
   The root directory of the file index.
 
   Defaults to `./`.
 
-#### `string` `serverName`:  
+###  `string` `serverName`  
   The name to use for the root directory in the file index.
 
   Defaults to the hostname of the server.
 
-#### `string[]` `hiddenFilePrefixes`:  
+###  `string[]` `hiddenFilePrefixes`  
   A list of file prefixes that should be hidden from the file index.
 
   **IMPORTANT:** This option DOES NOT block access to these files; it only hides them from view in the index. They are still downloadable by path.
 
   Defaults to `[ '.', '_' ]`.
 
-#### `string[]` `indexFiles`:  
+###  `string[]` `indexFiles`  
   A list of file names that should be sent on directory requests instead of the file index.
 
   Defaults to `[ 'index.html' ]`.
 
-#### `boolean` `statDirs`:  
+###  `boolean` `statDirs`  
   Whether to recursively process directories to calculate accurate sizes and modification times.
 
   This will slow index loading if you have lots of files and/or slow storage.
 
   Defaults to `false`.
 
-#### `boolean` `handle404`:  
+###  `boolean` `handle404`  
   Whether to handle 404 errors by displaying a custom error page.
 
   When set to `false`, `next()` will be called, passing the request to the next middleware.
 
   Defaults to `false`.
 
-#### `string` `handle404Document`:  
+###  `string` `handle404Document`  
   The path to a custom 404 error page.
 
   Defaults to the built-in error page matching the style of the file index.
 
-#### `boolean` `allowZipDownloads`:  
+###  `boolean` `allowZipDownloads`  
   Whether to allow downloading directories as (uncompressed) zip archives.
 
   When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are built and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
 
   Defaults to `false`.
 
-#### `boolean` `allowCleanPathAliases`:  
+###  `boolean` `allowCleanPathAliases`  
   Whether to allow clean aliases for files and directories in URLs.
 
   Clean aliases take the file/directory name, convert it to lowercase, replace spaces with dashes, and remove all characters other than a-z, 0-9, dashes, and underscores.
@@ -111,24 +109,24 @@ The middleware accepts an options object to customize its behavior. Below are th
 
   Defaults to `false`.
 
-#### `boolean` `forceCleanPathAliases`:  
+###  `boolean` `forceCleanPathAliases`  
   Whether to force clean path aliases by using them when navigating the file index.  `allowCleanPathAliases` must be `true` for this option to work.
 
   Defaults to `false`.
 
-#### `boolean` `enableLogging`:  
+###  `boolean` `enableLogging`  
   Whether debug/activity logs should be printed to the console.
 
   Defaults to `false`.
 
-#### `string[]` `ejsFilePath`:  
+###  `string[]` `ejsFilePath`  
   The path to an EJS template file to use for the file index. 
 
   This option is not recommended for most use cases, but can be used to develop your own file index UI. See the project readme for details.
 
   Defaults to the built-in template.
 
-#### `string` `fileTimeFormat`:  
+###  `string` `fileTimeFormat`  
   A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
 
   Defaults to `'MMM D, YYYY'`.
