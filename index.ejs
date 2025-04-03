@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= data.dir.name %></title>
     <% if (data.ancestors.length) { %>
+        <title><%= data.dir.name %> - <%= data.serverName %></title>
         <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
     <% } else { %>
+        <title><%= data.serverName %></title>
         <meta property="og:site_name" content="<%= data.serverName %>" />
     <% } %>
     <meta property="og:title" content="<%= data.dir.name %>" />
@@ -104,9 +105,9 @@
             </div>
         </div>
         <div class="footer">
-            Index provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
+            Indexed <%= data.files.length %> files and directories in <%= Date.now() - data.renderStartTime %> ms
+            <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
-            <br>Index generated in <%= Date.now() - data.renderStartTime %> ms
         </div>
     </div>
 </body>
