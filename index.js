@@ -354,10 +354,15 @@ module.exports = (options = {}) => async (req, res, next) => {
 
     // Read directory
     const fileNames = await fs.readdir(pathAbs);
+    dirFileNames[pathAbs] = fileNames;
     const filesOnly = [];
     const dirsOnly = [];
+    const limit = 1000;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
 
-    for (const fileName of fileNames) {
+    for (let i = 0; i < Math.min(fileNames.length, limit); i++) {
+        const fileName = fileNames[i + offset];
 
         // Skip if the file is hidden
         if (hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))

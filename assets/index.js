@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Loop through files to add context menus and find readme
-    const fileEntryElements = document.querySelectorAll('.files .entry');
+    const fileEntryElements = document.querySelectorAll('#fileEntries .entry');
     let readmePath = null;
     for (const entry of fileEntryElements) {
         const data = JSON.parse(entry.dataset.json);

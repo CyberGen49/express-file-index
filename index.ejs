@@ -75,7 +75,7 @@
                     <% } %>
                 </div>
             </div>
-            <div class="entries">
+            <div id="fileEntries" class="entries">
                 <% for (const file of data.files) { %>
                     <a class="entry" href="<%= file.path %>" data-json="<%= JSON.stringify(file) %>">
                         <div class="icon material-symbols <%= file.type %>"><%= file.icon %></div>
