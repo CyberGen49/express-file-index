@@ -6,6 +6,10 @@ const closePreview = () => {
         const elPreviewContent = document.querySelector('#previewContent');
         elPreviewContent.innerHTML = '';
     }, 100);
+    // Remove query string
+    const url = new URL(window.location.href);
+    url.searchParams.delete('preview');
+    history.pushState({}, '', url.toString());
 }
 
 const openPreview = () => {
@@ -104,6 +108,10 @@ const previewFile = async data => {
             elCode.innerHTML = highlightedHtml;
         }
     }
+    // Set query string
+    const url = new URL(window.location.href);
+    url.searchParams.set('preview', data.name);
+    history.pushState({}, '', url.toString());
     // Show preview dialog
     openPreview();
 }
@@ -145,6 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.name.toLowerCase() == 'readme.md' && !readmePath) {
             readmePath = data.path;
         }
+        // Handle click actions
         entry.addEventListener('click', (e) => {
             switch (fileSelectAction) {
                 case 'preview': {
@@ -166,6 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
+        // Handle context menus
         entry.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const items = [];
@@ -173,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items.push({
                     type: 'item',
                     icon: 'visibility',
-                    label: 'Preview',
+                    label: 'Preview file',
                     onClick: () => previewFile(data)
                 });
                 items.push({ type: 'separator' });
@@ -181,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             items.push({
                 type: 'item',
                 icon: 'open_in_new',
-                label: 'Open',
+                label: 'Open file in this tab',
                 onClick: () => entry.click()
             });
             items.push({
@@ -221,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items.push({
                     type: 'item',
                     icon: 'link',
-                    label: 'Copy default link',
+                    label: 'Copy default file link',
                     onClick: () => {
                         navigator.clipboard.writeText(window.location.origin + data.pathTrue);
                     }
@@ -229,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items.push({
                     type: 'item',
                     icon: 'link',
-                    label: 'Copy clean alias link',
+                    label: 'Copy clean alias file link',
                     onClick: () => {
                         navigator.clipboard.writeText(window.location.origin + data.pathAlias);
                     }
@@ -246,6 +256,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             showContextMenu({ items });
         });
+        // Show preview if query string matches file name
+        const url = new URL(window.location.href);
+        const previewFileName = url.searchParams.get('preview');
+        if (previewFileName && (data.name == previewFileName || data.path.split('/').pop() == previewFileName)) {
+            previewFile(data);
+        }
     }
 
     // Add button listeners
