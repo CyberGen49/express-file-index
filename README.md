@@ -4,6 +4,8 @@
 
 ![Screenshot of both themes](./promo.png)
 
+I use this project for my personal file server. Check it out [here](https://files.cybah.me/)!
+
 ## Features
 
 - **Static File Serving**: Serves files directly from the specified root directory.
