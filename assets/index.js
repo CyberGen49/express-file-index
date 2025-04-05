@@ -34,7 +34,7 @@ const previewFile = async data => {
     elPreviewFileSize.title = data.size + ' bytes';
     elPreviewFileModified.innerText = dayjs(data.modified).format(document.body.dataset.fileTimeFormat);
     elPreviewFileModified.title = dayjs(data.modified).format('YYYY-MM-DD HH:mm:ss');
-    elPreviewDownload.href = data.path;
+    elPreviewDownload.href = data.pathTrue;
     // Define all web browser supported file types
     const maxTextSize = 1024 * 1024 * 1; // 1 MiB
     const ext = data.name.split('.').pop().toLowerCase();
@@ -48,19 +48,19 @@ const previewFile = async data => {
     // Show preview according to the file type
     if (types.image.includes(ext)) {
         // Show image preview
-        elPreviewContent.innerHTML = `<img src="${data.path}" alt="${data.name}" />`;
+        elPreviewContent.innerHTML = `<img src="${data.pathTrue}" alt="${data.name}" />`;
     } else if (types.video.includes(ext)) {
         // Show video preview
         elPreviewContent.innerHTML = `
             <video controls autoplay>
-                <source src="${data.path}">
+                <source src="${data.pathTrue}">
             </video>
         `;
     } else if (types.audio.includes(ext)) {
         // Show audio preview
         elPreviewContent.innerHTML = `
             <audio controls autoplay>
-                <source src="${data.path}">
+                <source src="${data.pathTrue}">
             </audio>
         `;
     } else {
@@ -77,7 +77,7 @@ const previewFile = async data => {
                         <h3 style="text-align: center; margin: 0;">
                             This file can't be previewed.
                         </h3>
-                        <a href="${data.path}" download class="btn" onClick="closePreview()">
+                        <a href="${data.pathTrue}" download class="btn" onClick="closePreview()">
                             <span class="icon">download</span>
                             Download file - ${formatBytes(data.size)}
                         </a>
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const entry of fileEntryElements) {
         const data = JSON.parse(entry.dataset.json);
         if (data.name.toLowerCase() == 'readme.md' && !readmePath) {
-            readmePath = data.path;
+            readmePath = data.pathTrue;
         }
         // Handle click actions
         entry.addEventListener('click', (e) => {
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (data.type != 'folder') {
                         e.preventDefault();
                         const a = document.createElement('a');
-                        a.href = data.path;
+                        a.href = data.pathTrue;
                         a.download = data.name;
                         a.click();
                     }
