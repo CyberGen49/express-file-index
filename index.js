@@ -6,39 +6,56 @@ const archiver = require('archiver');
 
 /**
  * @typedef {Object} DefaultIndexOptions
- * @property {string} rootDir The root directory of the file index.
+ * @property {string} rootDir
+ * The root directory of the file index.
  * 
  * Defaults to `./`.
- * @property {string} serverName The name to use for the root directory in the file index.
+ * @property {string} serverName
+ * The name to use for the root directory in the file index.
  * 
  * Defaults to the hostname of the server.
- * @property {string[]} hiddenFilePrefixes A list of file prefixes that should be hidden from the file index.
+ * @property {string[]} hiddenFilePrefixes
+ * A list of file prefixes that should be hidden from the file index.
  * 
  * **IMPORTANT:** This option DOES NOT block access to these files; it only hides them from view in the index. They are still downloadable by path.
  * 
  * Defaults to `[ '.', '_' ]`.
- * @property {string[]} indexFiles A list of file names that should be sent on directory requests instead of the file index.
+ * @property {string[]} indexFiles
+ * A list of file names that should be sent on directory requests instead of the file index.
  * 
  * Defaults to `[ 'index.html' ]`.
- * @property {boolean} statDirs Whether to recursively process directories to calculate accurate sizes and modification times.
+ * @property {boolean} statDirs
+ * Whether to recursively process directories to calculate accurate sizes and modification times.
  * 
  * This will slow index loading if you have lots of files and/or slow storage.
  * 
  * Defaults to `false`.
- * @property {boolean} handle404 Whether to handle 404 errors by displaying a custom error page.
+ * @property {boolean} handle404
+ * Whether to handle 404 errors by displaying a custom error page.
  * 
  * When set to `false`, `next()` will be called, passing the request to the next middleware.
  * 
  * Defaults to `false`.
- * @property {string} handle404Document The path to a custom 404 error page.
+ * @property {string} handle404Document
+ * The path to a custom 404 error page. `handle404` must be `true` for this option to work.
  * 
- * Defaults to the built-in error page matching the style of the file index.
- * @property {boolean} allowZipDownloads Whether to allow downloading directories as (uncompressed) zip archives.
+ * Defaults to the built-in error page.
+ * @property {boolean} allowZipDownloads
+ * Whether to allow downloading directories recursively as (uncompressed) zip archives when the `format=zip` query parameter is present.
  * 
  * When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are built and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
  * 
  * Defaults to `false`.
- * @property {boolean} allowCleanPathAliases Whether to allow clean aliases for files and directories in URLs.
+ * @property {boolean} allowJsonRequests
+ * Whether to expose file index data as JSON when the `format=json` query parameter is present.
+ * 
+ * When requested, a JSON response will be returned containing an object with a single `data` property. This property contains the data outlined in the **Customization** section of the project readme.
+ * 
+ * Note that this may expose sensitive information in the form of absolute file paths. Enable at your own risk.
+ * 
+ * Defaults to `false`.
+ * @property {boolean} allowCleanPathAliases
+ * Whether to allow clean aliases for files and directories in URLs.
  * 
  * Clean aliases take the file/directory name, convert it to lowercase, replace spaces with dashes, and remove all characters other than a-z, 0-9, dashes, and underscores.
  * 
@@ -47,25 +64,30 @@ const archiver = require('archiver');
  * Enabling this option may also impact performance due to the extra processing required to resolve aliases and check for conflicts.
  * 
  * Defaults to `false`.
- * @property {boolean} forceCleanPathAliases Whether to force clean path aliases by using them when navigating the file index. `allowCleanPathAliases` must be `true` for this option to work.
+ * @property {boolean} forceCleanPathAliases
+ * Whether to force clean path aliases by using them when navigating the file index. `allowCleanPathAliases` must be `true` for this option to work.
  * 
  * Defaults to `false`.
- * @property {boolean} enableLogging Whether debug/activity logs should be printed to the console.
+ * @property {boolean} enableLogging
+ * Whether debug/activity logs should be printed to the console.
  * 
  * Defaults to `false`.
- * @property {string[]} ejsFilePath The path to an EJS template file to use for the file index. 
+ * @property {string[]} ejsFilePath
+ * The path to an EJS template file to use for the file index. 
  * 
- * This option is not recommended for most use cases, but can be used to develop your own file index UI. See the project readme for details.
+ * This option is not recommended for most use cases, but can be used to develop your own file index UI. See the **Customization** section of the project readme for details.
  * 
  * Defaults to the built-in template.
- * @property {'default'|'download'|'preview'} fileSelectAction What should happen when a file is selected in the file index. Can be one of:
+ * @property {'default'|'download'|'preview'} fileSelectAction
+ * What should happen when a file is selected in the file index. Can be one of:
  * 
  * - `default`: Leave it up to the browser to either download the file or open it in the same tab, depending on the file type.
  * - `download`: Always download the file, regardless of the file type.
  * - `preview`: Preview the file in a popup within the file index. If the file can't be previewed, the user will be prompted to download it.
  * 
  * Defaults to `'preview'`.
- * @property {string} fileTimeFormat A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
+ * @property {string} fileTimeFormat
+ * A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
  * 
  * Defaults to `'MMM D, YYYY'`.
  */
@@ -106,6 +128,7 @@ const defaultOpts = {
     allowCleanPathAliases: false,
     forceCleanPathAliases: false,
     fileSelectAction: 'preview',
+    allowJsonRequests: false
 };
 
 /**
@@ -284,7 +307,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     }
     
     // Zip and send if requested and enabled
-    if (req.query.zip && opts.allowZipDownloads) {
+    if (req.query.format == 'zip' && opts.allowZipDownloads) {
         log(`Requested zip download of directory: ${pathAbs}`);
 
         // Process files recursively
@@ -487,15 +510,12 @@ module.exports = (options = {}) => async (req, res, next) => {
 
     // Finalize index data
     const data = {
-        serverName: opts.serverName,
+        opts,
         ancestors: ancestorDirs,
         dir: ancestorDirs.pop(),
+        files,
         sortType,
         sortOrder,
-        files,
-        fileTimeFormat: opts.fileTimeFormat,
-        allowZipDownloads: opts.allowZipDownloads,
-        fileSelectAction: opts.fileSelectAction,
         nodejsVersion: process.version,
         osPlatform: process.platform,
         osArch: process.arch,
@@ -503,7 +523,13 @@ module.exports = (options = {}) => async (req, res, next) => {
     };
 
     // Return data as JSON if requested
-    if (req.query.json) {
+    if (req.query.format == 'json') {
+        if (!opts.allowJsonRequests) {
+            log(`Sending JSON disabled message for directory: ${pathAbs}`);
+            return res.json({
+                error: `JSON requests are disabled.`
+            });
+        }
         log(`Sending JSON data for directory: ${pathAbs}`);
         return res.json({ data });
     }

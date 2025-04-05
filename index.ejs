@@ -30,7 +30,7 @@
     <script src="?expressFileIndexAsset=base.js"></script>
     <script src="?expressFileIndexAsset=index.js" defer></script>
 </head>
-<body data-color-mode="dark" data-can-folders-download="<%= data.allowZipDownloads %>" data-file-time-format="<%= data.fileTimeFormat %>" data-file-select-action="<%= data.fileSelectAction %>">
+<body data-color-mode="dark" data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-file-time-format="<%= data.opts.fileTimeFormat %>" data-file-select-action="<%= data.opts.fileSelectAction %>">
     <div class="container">
         <div class="header">
             <% if (data.ancestors.length) { %>
@@ -51,8 +51,8 @@
                     <span class="icon">sort</span>
                     <span class="label">Sort...</span>
                 </button>
-                <% if (data.allowZipDownloads) { %>
-                    <a href="?zip=true" class="btn secondary square" download title="Download this folder as zip">
+                <% if (data.opts.allowZipDownloads) { %>
+                    <a href="?format=zip" class="btn secondary square" download title="Download this folder as zip">
                         <span class="icon">download</span>
                     </a>
                 <% } %>

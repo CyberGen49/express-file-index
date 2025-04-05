@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     icon: 'download',
                     label: 'Download folder as zip',
                     onClick: () => {
-                        window.location.href = entry.href + '?zip=true';
+                        window.location.href = entry.href + '?format=zip';
                     }
                 });
                 items.push({ type: 'separator' });
