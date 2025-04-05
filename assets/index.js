@@ -1,3 +1,119 @@
+const closePreview = () => {
+    const elPreview = document.querySelector('#preview');
+    elPreview.classList.remove('visible');
+    setTimeout(() => {
+        elPreview.style.display = 'none';
+        const elPreviewContent = document.querySelector('#previewContent');
+        elPreviewContent.innerHTML = '';
+    }, 100);
+}
+
+const openPreview = () => {
+    const elPreview = document.querySelector('#preview');
+    elPreview.style.display = '';
+    setTimeout(() => {
+        elPreview.classList.add('visible');
+    }, 10);
+}
+
+const previewFile = async data => {
+    // Get elements
+    const elPreviewName = document.querySelector('#previewFileName');
+    const elPreviewFileSize = document.querySelector('#previewFileSize');
+    const elPreviewFileModified = document.querySelector('#previewFileModified');
+    const elPreviewContent = document.querySelector('#previewContent');
+    const elPreviewDownload = document.querySelector('#previewDownload');
+    // Update elements
+    elPreviewName.innerText = data.name;
+    elPreviewName.title = data.name;
+    elPreviewFileSize.innerText = formatBytes(data.size);
+    elPreviewFileSize.title = data.size + ' bytes';
+    elPreviewFileModified.innerText = dayjs(data.modified).format(document.body.dataset.fileTimeFormat);
+    elPreviewFileModified.title = dayjs(data.modified).format('YYYY-MM-DD HH:mm:ss');
+    elPreviewDownload.href = data.path;
+    // Define all web browser supported file types
+    const maxTextSize = 1024 * 1024 * 1; // 1 MiB
+    const ext = data.name.split('.').pop().toLowerCase();
+    const types = {
+        image: [ 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg' ],
+        video: [ 'mp4', 'webm' ],
+        audio: [ 'mp3', 'wav', 'ogg', 'aac' ],
+        md: [ 'md', 'markdown' ],
+        html: [ 'html', 'htm' ]
+    }
+    // Show preview according to the file type
+    if (types.image.includes(ext)) {
+        // Show image preview
+        elPreviewContent.innerHTML = `<img src="${data.path}" alt="${data.name}" />`;
+    } else if (types.video.includes(ext)) {
+        // Show video preview
+        elPreviewContent.innerHTML = `
+            <video controls autoplay>
+                <source src="${data.path}">
+            </video>
+        `;
+    } else if (types.audio.includes(ext)) {
+        // Show audio preview
+        elPreviewContent.innerHTML = `
+            <audio controls autoplay>
+                <source src="${data.path}">
+            </audio>
+        `;
+    } else {
+        // Attempt to download file as text
+        let text;
+        if (data.size < maxTextSize) {
+            text = await fetchTextFile(data.pathTrue);
+        }
+        // If the file was too big or not text, prompt to download
+        if (!text) {
+            elPreviewContent.innerHTML = /*html*/`
+                <div class="card">
+                    <div class="body col">
+                        <h3 style="text-align: center; margin: 0;">
+                            This file can't be previewed.
+                        </h3>
+                        <a href="${data.path}" download class="btn" onClick="closePreview()">
+                            <span class="icon">download</span>
+                            Download file - ${formatBytes(data.size)}
+                        </a>
+                    </div>
+                </div>
+            `;
+        // Show markdown preview
+        } else if (types.md.includes(ext)) {
+            const html = markdownToSafeHTML(text);
+            elPreviewContent.innerHTML = /*html*/`
+                <div class="card">
+                    <div class="body">${html}</div>
+                </div>
+            `;
+            Prism.highlightAll(elPreviewContent);
+        // Show text preview
+        } else {
+            elPreviewContent.innerHTML = /*html*/`
+                <div class="card">
+                    <pre class="body"><code class="language-${ext}"></code></pre>
+                </div>
+            `;
+            const elCode = elPreviewContent.querySelector('code');
+            let highlightedHtml = text;
+            try {
+                highlightedHtml = Prism.highlight(text, Prism.languages[ext], ext);
+            } catch (error) {}
+            elCode.innerHTML = highlightedHtml;
+        }
+    }
+    // Show preview dialog
+    openPreview();
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key == 'Escape') {
+        closePreview();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
 
     // Format dates
@@ -20,31 +136,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         fileSize.innerText = formatBytes(value);
     }
 
-    // Loop through files to add context menus and find readme
+    // Loop through files to add context menus, click actions, and find readme
     const fileEntryElements = document.querySelectorAll('#fileEntries .entry');
+    const fileSelectAction = document.body.dataset.fileSelectAction;
     let readmePath = null;
     for (const entry of fileEntryElements) {
         const data = JSON.parse(entry.dataset.json);
         if (data.name.toLowerCase() == 'readme.md' && !readmePath) {
             readmePath = data.path;
         }
+        entry.addEventListener('click', (e) => {
+            switch (fileSelectAction) {
+                case 'preview': {
+                    if (data.type != 'folder' && data.size !== '-') {
+                        e.preventDefault();
+                        previewFile(data);
+                    }
+                    break;
+                }
+                case 'download': {
+                    if (data.type != 'folder') {
+                        e.preventDefault();
+                        const a = document.createElement('a');
+                        a.href = data.path;
+                        a.download = data.name;
+                        a.click();
+                    }
+                    break;
+                }
+            }
+        });
         entry.addEventListener('contextmenu', (e) => {
             e.preventDefault();
-            const items = [
-                {
+            const items = [];
+            if (data.type != 'folder' && data.size > 0) {
+                items.push({
                     type: 'item',
-                    icon: 'open_in_new',
-                    label: 'Open...',
-                    onClick: () => entry.click()
-                },
-                {
-                    type: 'item',
-                    icon: 'open_in_new',
-                    label: 'Open in new tab...',
-                    onClick: () => window.open(entry.href, '_blank')
-                },
-                { type: 'separator' }
-            ];
+                    icon: 'visibility',
+                    label: 'Preview',
+                    onClick: () => previewFile(data)
+                });
+                items.push({ type: 'separator' });
+            }
+            items.push({
+                type: 'item',
+                icon: 'open_in_new',
+                label: 'Open',
+                onClick: () => entry.click()
+            });
+            items.push({
+                type: 'item',
+                icon: 'open_in_new',
+                label: 'Open in new tab...',
+                onClick: () => window.open(entry.href, '_blank')
+            });
+            items.push({ type: 'separator' });
             const canFoldersDownload = document.body.dataset.canFoldersDownload === 'true';
             const fileName = entry.querySelector('.name').title;
             if (data.type == 'folder' && canFoldersDownload && fileName !== '..') {
@@ -71,14 +217,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 items.push({ type: 'separator' });
             }
-            items.push({
-                type: 'item',
-                icon: 'link',
-                label: 'Copy link',
-                onClick: () => {
-                    navigator.clipboard.writeText(entry.href);
-                }
-            });
+            if (data.path == data.pathAlias) {
+                items.push({
+                    type: 'item',
+                    icon: 'link',
+                    label: 'Copy default link',
+                    onClick: () => {
+                        navigator.clipboard.writeText(window.location.origin + data.pathTrue);
+                    }
+                });
+                items.push({
+                    type: 'item',
+                    icon: 'link',
+                    label: 'Copy clean alias link',
+                    onClick: () => {
+                        navigator.clipboard.writeText(window.location.origin + data.pathAlias);
+                    }
+                });
+            } else {
+                items.push({
+                    type: 'item',
+                    icon: 'link',
+                    label: 'Copy link',
+                    onClick: () => {
+                        navigator.clipboard.writeText(entry.href);
+                    }
+                });
+            }
             showContextMenu({ items });
         });
     }
@@ -164,6 +329,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Close preview when background is clicked
+    // But not when the buttons or the preview itself are clicked
+    const elPreview = document.querySelector('#preview');
+    const elPreviewContent = document.querySelector('#previewContent');
+    elPreview.addEventListener('click', (e) => {
+        if ([ elPreview, elPreviewContent ].includes(e.target)) {
+            closePreview();
+        }
+    });
+
     // Load readme
     if (readmePath) {
         const elReadme = document.querySelector('#readme');
@@ -174,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const markdown = res.data;
         const html = markdownToSafeHTML(markdown);
         elReadmeBody.innerHTML = html;
+        Prism.highlightAll(elReadmeBody);
     }
 
 });

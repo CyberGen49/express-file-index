@@ -14,6 +14,7 @@
 - **Zip Downloads**: Optionally allow downloading directories as zip archives.
 - **Recursive Directory Stats**: Calculate accurate sizes and modification times for directories.
 - **Readme Display**: Parse and display README.md files in directories.
+- **File Previews**: View images, videos, audio files, and text files complete with syntax highlighting without leaving the file index.
 - **Clean URL Aliases**: Allow accessing files and directories with clean aliases in addition to their normal names.
 
 ## Installation
@@ -126,6 +127,15 @@ The middleware accepts an options object to customize its behavior. Below are th
 
   Defaults to the built-in template.
 
+### `string` `fileSelectAction`  
+  What should happen when a file is selected in the file index. Can be one of:
+
+  - `default`: Leave it up to the browser to either download the file or open it in the same tab, depending on the file type.
+  - `download`: Always download the file, regardless of the file type.
+  - `preview`: Preview the file in a popup within the file index. If the file can't be previewed, the user will be prompted to download it.
+
+  Defaults to `'preview'`.
+
 ###  `string` `fileTimeFormat`  
   A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
 
@@ -135,13 +145,13 @@ The middleware accepts an options object to customize its behavior. Below are th
 
 You can customize the file index UI by providing your own EJS template file via the `ejsFilePath` option. The following data is available as properties under the `data` object:
 
-- `serverName`: The name of the server.
+- `serverName`: The value of the `serverName` option.
 - `ancestors`: An array of parent directories., each with `name` and `path` properties.
 - `dir`: An object describing the current directory, with the same format as an `ancestors` item.
 - `files`: A sorted array of files and directories in the current directory. Each entry contains the following:
   - `string` `name`: The file name
   - `string` `path`: If `forceCleanPathAliases` is `true`, this is the file's relative clean alias path. If it's `false`, this is the file's actual relative path.
-  - `string` `pathAlias`: The file's relative clean alias path, or `null` if `forceCleanPathAliases` is `false`
+  - `string` `pathAlias`: The file's relative clean alias path, or `null` if `allowCleanPathAliases` is `false`
   - `string` `pathTrue`: The file's actual relative path
   - `boolean` `isDirectory`: Whether or not the file is a directory
   - `number|string` `size`: The file's size in bytes, or `'-'` if not applicable
@@ -150,8 +160,9 @@ You can customize the file index UI by providing your own EJS template file via 
   - `string` `icon` A [Google Material Symbol](https://fonts.google.com/icons) name
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
-- `fileTimeFormat`: The format to use for file modification times.
-- `allowZipDownloads`: Whether zip downloads are enabled.
+- `fileTimeFormat`: The value of the `fileTimeFormat` option.
+- `allowZipDownloads`: The value of the `allowZipDownloads` option.
+- `fileSelectAction`: The value of the `fileSelectAction` option.
 - `nodejsVersion`: The Node.js version.
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.

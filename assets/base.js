@@ -18,10 +18,29 @@ const formatBytes = bytes => {
     return `${roundSmart(bytes)} ${units[i]}`;
 };
 
+// Returns true if a string is plain text, false if it contains binary data
+// This will be used to determine if the contents of a file are text or binary
+const isStringPlainText = (str) => {
+    if (str.length === 0) return true;
+    const regex = /^[\x09\x0A\x0D\x20-\x7E\xA0-\uFFFF]+$/;
+    return regex.test(str);
+}
+
 // Assuming marked and dompurify are already included in the project
 const markdownToSafeHTML = (markdown) => {
     const html = marked.parse(markdown);
     return DOMPurify.sanitize(html);
+}
+
+const fetchTextFile = async url => {
+    const res = await axios.get(url, {
+        responseType: 'text'
+    });
+    const text = res.data;
+    if (isStringPlainText(text)) {
+        return text;
+    }
+    return null;
 }
 
 const mouse = { x: 0, y: 0 };
@@ -134,5 +153,7 @@ const setColorMode = () => {
     }
 };
 
-setColorMode();
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
+document.addEventListener('DOMContentLoaded', () => {
+    setColorMode();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
+});

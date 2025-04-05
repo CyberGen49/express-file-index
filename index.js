@@ -58,10 +58,35 @@ const archiver = require('archiver');
  * This option is not recommended for most use cases, but can be used to develop your own file index UI. See the project readme for details.
  * 
  * Defaults to the built-in template.
+ * @property {'default'|'download'|'preview'} fileSelectAction What should happen when a file is selected in the file index. Can be one of:
+ * 
+ * - `default`: Leave it up to the browser to either download the file or open it in the same tab, depending on the file type.
+ * - `download`: Always download the file, regardless of the file type.
+ * - `preview`: Preview the file in a popup within the file index. If the file can't be previewed, the user will be prompted to download it.
+ * 
+ * Defaults to `'preview'`.
  * @property {string} fileTimeFormat A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
  * 
- * Defaults to `MMM D, YYYY`.
+ * Defaults to `'MMM D, YYYY'`.
  */
+
+// Function to sanitize a file name so no URL encoding is needed
+const getFileNameAlias = (fileName) => {
+    return fileName
+            .toLowerCase()
+            .replace(/ /g, '-')
+            .replace(/[^a-z0-9-_\.]/g, '');
+};
+
+// Function to asynchronously check if a file exists
+const fileExists = async (filePath) => {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * @type {DefaultIndexOptions}
@@ -79,7 +104,8 @@ const defaultOpts = {
     fileTimeFormat: 'MMM D, YYYY',
     enableLogging: false,
     allowCleanPathAliases: false,
-    forceCleanPathAliases: false
+    forceCleanPathAliases: false,
+    fileSelectAction: 'preview',
 };
 
 /**
@@ -89,44 +115,28 @@ const defaultOpts = {
  */
 module.exports = (options = {}) => async (req, res, next) => {
 
+    // Merge options with default options
+    const opts = { ...defaultOpts, ...options };
+    opts.serverName = opts.serverName || req.hostname;
+
     // Get paths and options
     const renderStartTime = Date.now();
-    const pathRoot = path.resolve(options.rootDir || defaultOpts.rootDir);
+    const pathRoot = path.resolve(opts.rootDir);
     let pathRel = path.normalize('/' + decodeURI(req.path));
     let pathAbs = path.normalize(path.join(pathRoot, pathRel));
-    const serverName = options.serverName || req.hostname || 'server';
-    const hiddenFilePrefixes = options.hiddenFilePrefixes || defaultOpts.hiddenFilePrefixes;
-    const indexFiles = options.indexFiles || defaultOpts.indexFiles;
-    const handle404s = options.handle404 || defaultOpts.handle404;
-    const handle404Document = options.handle404Document || defaultOpts.handle404Document;
-    const statDirs = options.statDirs || defaultOpts.statDirs;
-    const allowZipDownloads = options.allowZipDownloads || defaultOpts.allowZipDownloads;
-    const ejsFilePath = options.ejsFilePath || defaultOpts.ejsFilePath;
-    const fileTimeFormat = options.fileTimeFormat || defaultOpts.fileTimeFormat;
-    const enableLogging = options.enableLogging || defaultOpts.enableLogging;
-    const allowCleanPathAliases = options.allowCleanPathAliases || defaultOpts.allowCleanPathAliases;
-    const forceCleanPathAliases = options.forceCleanPathAliases || defaultOpts.forceCleanPathAliases;
 
     // Logging function
     const log = (message) => {
-        if (!enableLogging) return;
+        if (!opts.enableLogging) return;
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         console.log(`[${ip}] ${message}`);
-    }
-
-    // Function to sanitize a file name so no URL encoding is needed
-    const getFileNameAlias = (fileName) => {
-        return fileName
-               .toLowerCase()
-               .replace(/ /g, '-')
-               .replace(/[^a-z0-9-_\.]/g, '');
-    }
+    };
     
     // Function to resolve the actual relative file path of an alias path
     // If a file exists with the same name as the alias, it will be used instead
     // If a resolution can't be found, null is returned
     const resolvePathAlias = async (pathRelAlias) => {
-        if (!allowCleanPathAliases) return pathRelAlias;
+        if (!opts.allowCleanPathAliases) return pathRelAlias;
         const parts = pathRelAlias.split('/').filter(Boolean);
         let currentDir = pathRoot;
         let pathRelParts = [];
@@ -167,7 +177,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     const dirFileNames = {};
     const fileNameAliasesMap = {};
     const getPathAlias = async (pathRel) => {
-        if (!allowCleanPathAliases) return pathRel;
+        if (!opts.allowCleanPathAliases) return pathRel;
         const parts = pathRel.split('/').filter(Boolean);
         let currentDir = pathRoot;
         let pathRelAliasParts = [];
@@ -227,16 +237,6 @@ module.exports = (options = {}) => async (req, res, next) => {
         return pathRelAlias;
     };
 
-    // Function to check if a file exists
-    const fileExists = async (filePath) => {
-        try {
-            await fs.access(filePath);
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
     // Handle asset requests
     const asset = req.query.expressFileIndexAsset;
     if (asset) {
@@ -254,7 +254,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     }
 
     // Attempt to find path alias if the path doesn't exist
-    if (!await fileExists(pathAbs) && allowCleanPathAliases) {
+    if (!await fileExists(pathAbs) && opts.allowCleanPathAliases) {
         const unsanitizedPathRel = await resolvePathAlias(pathRel);
         if (unsanitizedPathRel) {
             pathRel = unsanitizedPathRel;
@@ -265,9 +265,9 @@ module.exports = (options = {}) => async (req, res, next) => {
     // Make sure the file exists
     if (!await fileExists(pathAbs)) {
         // Handle error 404 if enabled
-        if (handle404s) {
+        if (opts.handle404) {
             log(`Handling 404 for file: ${pathAbs}`);
-            return res.status(404).sendFile(handle404Document);
+            return res.status(404).sendFile(opts.handle404Document);
         } else {
             return next();
         }
@@ -284,7 +284,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     }
     
     // Zip and send if requested and enabled
-    if (req.query.zip && allowZipDownloads) {
+    if (req.query.zip && opts.allowZipDownloads) {
         log(`Requested zip download of directory: ${pathAbs}`);
 
         // Process files recursively
@@ -293,7 +293,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         const recurse = async (dirPath) => {
             const fileNames = await fs.readdir(dirPath);
             for (const fileName of fileNames) {
-                if (hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
+                if (opts.hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
                     continue;
                 const filePathAbs = path.join(dirPath, fileName);
                 const filePathRel = path.relative(pathAbs, filePathAbs);
@@ -345,7 +345,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     }
 
     // Check for index files
-    for (const name of indexFiles) {
+    for (const name of opts.indexFiles) {
         const pathIndexFile = path.join(pathAbs, name);
         if (!await fileExists(pathIndexFile)) continue;
         log(`Requested index file: ${pathIndexFile}`);
@@ -365,7 +365,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         const fileName = fileNames[i + offset];
 
         // Skip if the file is hidden
-        if (hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
+        if (opts.hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
             continue;
 
         // Get file paths and stats
@@ -378,7 +378,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         let modified = isDirectory ? '-' : stats.mtimeMs;
 
         // Process directories if enabled
-        if (isDirectory && statDirs) {
+        if (isDirectory && opts.statDirs) {
             size = 0;
             modified = 0;
             const recurse = async (dirPath) => {
@@ -416,10 +416,10 @@ module.exports = (options = {}) => async (req, res, next) => {
         ) || 'file';
 
         // Add to list
-        const filePathRelAlias = forceCleanPathAliases ? await getPathAlias(filePathRel) : null;
+        const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) : null;
         (isDirectory ? dirsOnly : filesOnly).push({
             name: fileName,
-            path: forceCleanPathAliases ? filePathRelAlias : filePathRel,
+            path: opts.forceCleanPathAliases ? filePathRelAlias : filePathRel,
             pathAlias: filePathRelAlias,
             pathTrue: filePathRel,
             isDirectory,
@@ -457,7 +457,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         const pathRelParentAlias = await getPathAlias(path.join(pathRel, './..'));
         dirsOnly.unshift({
             name: '..',
-            path: allowCleanPathAliases ? pathRelParentAlias : path.join(pathRel, './..'),
+            path: opts.allowCleanPathAliases ? pathRelParentAlias : path.join(pathRel, './..'),
             pathAlias: pathRelParentAlias,
             pathTrue: pathRelParent,
             isDirectory: true,
@@ -471,7 +471,7 @@ module.exports = (options = {}) => async (req, res, next) => {
 
     // Get parent directory names and paths
     const ancestorDirs = [
-        { name: serverName, path: '/' },
+        { name: opts.serverName, path: '/' },
     ];
     for (let i = 0; i < pathParts.length; i++) {
         const ancestorPathRel = '/' + pathParts.slice(0, i + 1).join('/');
@@ -479,7 +479,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         const ancestorName = pathParts[i];
         ancestorDirs.push({
             name: ancestorName,
-            path: forceCleanPathAliases ? ancestorPathRelAlias : ancestorPathRel,
+            path: opts.forceCleanPathAliases ? ancestorPathRelAlias : ancestorPathRel,
             pathAlias: ancestorPathRelAlias,
             pathTrue: ancestorPathRel,
         });
@@ -487,14 +487,15 @@ module.exports = (options = {}) => async (req, res, next) => {
 
     // Finalize index data
     const data = {
-        serverName,
+        serverName: opts.serverName,
         ancestors: ancestorDirs,
         dir: ancestorDirs.pop(),
         sortType,
         sortOrder,
         files,
-        fileTimeFormat,
-        allowZipDownloads,
+        fileTimeFormat: opts.fileTimeFormat,
+        allowZipDownloads: opts.allowZipDownloads,
+        fileSelectAction: opts.fileSelectAction,
         nodejsVersion: process.version,
         osPlatform: process.platform,
         osArch: process.arch,
@@ -509,7 +510,7 @@ module.exports = (options = {}) => async (req, res, next) => {
 
     // Render index
     log(`Rendering file index for directory: ${pathAbs}`);
-    const html = await ejs.renderFile(ejsFilePath, { data });
+    const html = await ejs.renderFile(opts.ejsFilePath, { data });
 
     // Respond
     res.setHeader('Content-Type', 'text/html');
