@@ -348,9 +348,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Close preview when background is clicked
     // But not when the buttons or the preview itself are clicked
     const elPreview = document.querySelector('#preview');
+    const elPreviewTopbar = elPreview.querySelector('.topbar');
     const elPreviewContent = document.querySelector('#previewContent');
     elPreview.addEventListener('click', (e) => {
-        if ([ elPreview, elPreviewContent ].includes(e.target)) {
+        if ([ elPreview, elPreviewTopbar, elPreviewContent ].includes(e.target)) {
             closePreview();
         }
     });
@@ -368,4 +369,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         Prism.highlightAll(elReadmeBody);
     }
 
+});
+
+window.addEventListener('popstate', () => {
+    closePreview();
 });

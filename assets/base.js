@@ -143,10 +143,6 @@ const showContextMenu = (options, shouldPosition = true) => {
 const setColorMode = () => {
     const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
-    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeColorMeta) {
-        themeColorMeta.setAttribute('content', isDarkMode ? '#1a1a1a' : '#f2f2f2');
-    }
     const iconMeta = document.querySelector('link[rel="icon"]');
     if (iconMeta) {
         iconMeta.setAttribute('href', isDarkMode ? '?expressFileIndexAsset=icon-light.png' : '?expressFileIndexAsset=icon-dark.png');
