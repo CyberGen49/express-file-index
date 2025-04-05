@@ -127,6 +127,7 @@ pre {
     border-radius: 8px;
     border: 1px solid var(--c-border);
     background: var(--c-code-bg);
+    overflow-x: auto;
 }
 pre code {
     font-family: 'Roboto Mono', monospace;
