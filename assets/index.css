@@ -353,13 +353,17 @@ body[data-color-mode='light'] {
     justify-content: center;
     padding: 12px;
     opacity: 0;
-    pointer-events: none;
     transition: opacity 0.2s ease-in-out;
 }
 #previewContent .card.video > .body .overlay.visible {
     opacity: 1;
-    pointer-events: all;
     transition: none;
+}
+#previewContent .card.video > .body .overlay > * {
+    pointer-events: none;
+}
+#previewContent .card.video > .body .overlay.visible > * {
+    pointer-events: all;
 }
 
 #previewContent .card.video > .body .controls {

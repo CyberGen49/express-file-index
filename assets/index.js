@@ -109,28 +109,9 @@ const previewFile = async data => {
             }
         };
 
+        video.addEventListener('mousemove', showControls);
         overlay.addEventListener('mousemove', showControls);
         overlay.addEventListener('mouseleave', hideControls);
-
-        document.addEventListener('keydown', (e) => {
-            if (document.activeElement.tagName === 'INPUT') return; // Ignore if typing in input
-            switch (e.key) {
-                case ' ':
-                    e.preventDefault();
-                    if (video.paused) {
-                        video.play();
-                    } else {
-                        video.pause();
-                    }
-                    break;
-                case 'ArrowRight':
-                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
-                    break;
-                case 'ArrowLeft':
-                    video.currentTime = Math.max(0, video.currentTime - 10);
-                    break;
-            }
-        });
 
         btnMenu.addEventListener('click', (e) => {
             e.preventDefault();
@@ -168,9 +149,11 @@ const previewFile = async data => {
         });
         video.addEventListener('play', () => {
             btnPlayPause.querySelector('.icon').innerText = 'pause';
+            showControls();
         });
         video.addEventListener('pause', () => {
             btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
+            showControls();
         });
         video.addEventListener('timeupdate', () => {
             const percent = (video.currentTime / video.duration) * 100;
@@ -197,6 +180,9 @@ const previewFile = async data => {
             }
         });
         overlay.addEventListener('click', (e) => {
+            if (matchMedia('(hover: none)').matches) {
+                return;
+            }
             if (e.target === overlay) {
                 if (video.paused) {
                     video.play();
@@ -330,8 +316,30 @@ const previewFile = async data => {
 }
 
 document.addEventListener('keydown', (e) => {
-    if (e.key == 'Escape') {
-        closePreview();
+    if (document.activeElement.tagName === 'INPUT') return;
+    const elPreviewContent = document.querySelector('#previewContent');
+    const media = elPreviewContent.querySelector('video') || elPreviewContent.querySelector('audio');
+    switch (e.key) {
+        case ' ':
+            if (!media) break;
+            e.preventDefault();
+            if (media.paused) {
+                media.play();
+            } else {
+                media.pause();
+            }
+            break;
+        case 'ArrowRight':
+            if (!media) break;
+            media.currentTime = Math.min(media.duration, media.currentTime + 10);
+            break;
+        case 'ArrowLeft':
+            if (!media) break;
+            media.currentTime = Math.max(0, media.currentTime - 10);
+            break;
+        case 'Escape':
+            closePreview();
+            break;
     }
 });
 
