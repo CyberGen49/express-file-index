@@ -264,7 +264,6 @@ body[data-color-mode='light'] {
 }
 
 #previewContent .card {
-    max-width: 1000px;
     border-radius: 16px;
     max-height: 100%;
     overflow: hidden;
@@ -291,6 +290,10 @@ body[data-color-mode='light'] {
     gap: 8px;
 }
 
+#previewContent .card.text,
+#previewContent .card.html {
+    max-width: 1000px;
+}
 #previewContent .card.text > .body {
     background: none;
     border: none;
