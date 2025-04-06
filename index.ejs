@@ -56,6 +56,11 @@
                         <span class="icon">download</span>
                     </a>
                 <% } %>
+                <% if (data.opts.allowJsonRequests) { %>
+                    <a href="?format=json" class="btn secondary square" title="View this index as JSON">
+                        <span class="icon">code</span>
+                    </a>
+                <% } %>
             </div>
         </div>
         <div class="files">
@@ -109,7 +114,7 @@
             </div>
         </div>
         <div class="footer">
-            Indexed <%= data.files.length %> files and directories in <%= Date.now() - data.renderStartTime %> ms
+            Processed <%= data.files.length %> files and directories <%= data.opts.statDirs ? '(recursively)' : '' %> in <%= data.processTimeMs %> ms
             <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
         </div>

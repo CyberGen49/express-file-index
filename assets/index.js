@@ -191,13 +191,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             items.push({
                 type: 'item',
                 icon: 'open_in_new',
-                label: 'Open file in this tab',
-                onClick: () => entry.click()
+                label: 'Open file',
+                onClick: () => window.location.href = entry.href
             });
             items.push({
                 type: 'item',
                 icon: 'open_in_new',
-                label: 'Open in new tab...',
+                label: 'Open file in new tab...',
                 onClick: () => window.open(entry.href, '_blank')
             });
             items.push({ type: 'separator' });

@@ -519,7 +519,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         nodejsVersion: process.version,
         osPlatform: process.platform,
         osArch: process.arch,
-        renderStartTime
+        processTimeMs: Date.now() - renderStartTime
     };
 
     // Return data as JSON if requested

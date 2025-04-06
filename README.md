@@ -190,4 +190,4 @@ You can customize the file index UI by providing your own EJS template file via 
 - `nodejsVersion`: The Node.js version.
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.
-- `renderStartTime`: A millisecond timestamp representing the time the request was received.
+- `processTimeMs`: The number of milliseconds it took to process the request.

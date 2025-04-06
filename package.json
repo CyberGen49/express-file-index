@@ -1,6 +1,6 @@
 {
   "name": "express-file-index",
-  "version": "1.6.8",
+  "version": "1.6.9",
   "description": "A simple file index middleware for Express.",
   "keywords": [
     "express",

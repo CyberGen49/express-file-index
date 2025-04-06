@@ -43,6 +43,17 @@ const fetchTextFile = async url => {
     return null;
 }
 
+const openWindow = (url, width, height) => {
+    const left = (screen.width / 2) - (width / 2);
+    const top = (screen.height / 2) - (height / 2);
+    const win = window.open(url, '_blank', `width=${width},height=${height},left=${left},top=${top}`);
+    if (win) {
+        win.focus();
+    } else {
+        alert(`Enable popups for this site to open a new window.`);
+    }
+}
+
 const mouse = { x: 0, y: 0 };
 document.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
