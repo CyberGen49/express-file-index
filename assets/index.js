@@ -48,21 +48,234 @@ const previewFile = async data => {
     // Show preview according to the file type
     if (types.image.includes(ext)) {
         // Show image preview
-        elPreviewContent.innerHTML = `<img src="${data.pathTrue}" alt="${data.name}" />`;
+        elPreviewContent.innerHTML = /*html*/`
+            <div class="card image">
+                <div class="body">
+                    <img src="${data.pathTrue}" alt="${data.name}" />
+                </div>
+            </div>
+        `;
     } else if (types.video.includes(ext)) {
         // Show video preview
-        elPreviewContent.innerHTML = `
-            <video controls autoplay>
-                <source src="${data.pathTrue}">
-            </video>
+        elPreviewContent.innerHTML = /*html*/`
+            <div class="card video">
+                <div class="body">
+                    <video autoplay src="${data.pathTrue}"></video>
+                    <div class="overlay visible">
+                        <div class="controls">
+                            <button class="btn secondary square playPause">
+                                <span class="icon">play_arrow</span>
+                            </button>
+                            <div class="progress">
+                                <div class="current">0:00</div>
+                                <input type="range" min="0" max="100" value="0" step="0.001" style="--value: 0;" />
+                                <div class="duration">0:00</div>
+                            </div>
+                            <button class="btn secondary square fullscreen">
+                                <span class="icon">fullscreen</span>
+                            </button>
+                            <button class="btn secondary square menu">
+                                <span class="icon">more_vert</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
+        const video = elPreviewContent.querySelector('video');
+        const btnPlayPause = elPreviewContent.querySelector('.playPause');
+        const btnFullscreen = elPreviewContent.querySelector('.fullscreen');
+        const btnMenu = elPreviewContent.querySelector('.menu');
+        const elProgress = elPreviewContent.querySelector('.progress input[type="range"]');
+        const elTsCurrent = elPreviewContent.querySelector('.progress .current');
+        const elTsDuration = elPreviewContent.querySelector('.progress .duration');
+        const overlay = elPreviewContent.querySelector('.overlay');
+
+        let controlsTimeout;
+
+        const showControls = () => {
+            overlay.classList.add('visible');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                hideControls();
+            }, 3000);
+        };
+
+        const hideControls = () => {
+            if (!video.paused) {
+                overlay.classList.remove('visible');
+            } else {
+                showControls();
+            }
+        };
+
+        overlay.addEventListener('mousemove', showControls);
+        overlay.addEventListener('mouseleave', hideControls);
+
+        document.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'INPUT') return; // Ignore if typing in input
+            switch (e.key) {
+                case ' ':
+                    e.preventDefault();
+                    if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                    break;
+                case 'ArrowRight':
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    break;
+                case 'ArrowLeft':
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    break;
+            }
+        });
+
+        btnMenu.addEventListener('click', (e) => {
+            e.preventDefault();
+            const items = [
+                {
+                    type: 'item',
+                    label: '0.5x',
+                    onClick: () => video.playbackRate = 0.5
+                },
+                {
+                    type: 'item',
+                    label: '1x (Normal)',
+                    onClick: () => video.playbackRate = 1
+                },
+                {
+                    type: 'item',
+                    label: '1.5x',
+                    onClick: () => video.playbackRate = 1.5
+                },
+                {
+                    type: 'item',
+                    label: '2x',
+                    onClick: () => video.playbackRate = 2
+                },
+            ];
+            showContextMenu({ items });
+        });
+
+        btnPlayPause.addEventListener('click', () => {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        });
+        video.addEventListener('play', () => {
+            btnPlayPause.querySelector('.icon').innerText = 'pause';
+        });
+        video.addEventListener('pause', () => {
+            btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
+        });
+        video.addEventListener('timeupdate', () => {
+            const percent = (video.currentTime / video.duration) * 100;
+            const tsCurrent = formatSecondsToTimestamp(video.currentTime);
+            const tsDuration = formatSecondsToTimestamp(video.duration);
+            elProgress.value = percent;
+            elProgress.style.setProperty('--value', percent);
+            elTsCurrent.innerText = tsCurrent;
+            elTsDuration.innerText = tsDuration;
+        });
+        elProgress.addEventListener('input', () => {
+            const percent = elProgress.value;
+            elProgress.style.setProperty('--value', percent);
+            video.currentTime = video.duration * (percent / 100);
+        });
+        btnFullscreen.addEventListener('click', () => {
+            const container = elPreviewContent.querySelector('.card.video .body');
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            } else if (container.msRequestFullscreen) {
+                container.msRequestFullscreen();
+            }
+        });
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            }
+        });
     } else if (types.audio.includes(ext)) {
         // Show audio preview
-        elPreviewContent.innerHTML = `
-            <audio controls autoplay>
-                <source src="${data.pathTrue}">
-            </audio>
+        elPreviewContent.innerHTML = /*html*/`
+            <div class="card audio">
+                <div class="body">
+                    <audio autoplay src="${data.pathTrue}" style="display: none"></audio>
+                    <div class="times">
+                        <div class="current">0:00</div>
+                        <div class="grow"></div>
+                        <div class="duration">0:00</div>
+                    </div>
+                    <div class="progress">
+                        <input type="range" min="0" max="100" value="0" step="0.001" style="--value: 0;" />
+                    </div>
+                    <div class="controls">
+                        <button class="btn secondary square backward">
+                            <span class="icon">replay_10</span>
+                        </button>
+                        <button class="btn square playPause">
+                            <span class="icon">play_arrow</span>
+                        </button>
+                        <button class="btn secondary square forward">
+                            <span class="icon">forward_10</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         `;
+        const audio = elPreviewContent.querySelector('audio');
+        const btnPlayPause = elPreviewContent.querySelector('.playPause');
+        const btnBackward = elPreviewContent.querySelector('.backward');
+        const btnForward = elPreviewContent.querySelector('.forward');
+        const elProgress = elPreviewContent.querySelector('.progress input[type="range"]');
+        const elTsCurrent = elPreviewContent.querySelector('.current');
+        const elTsDuration = elPreviewContent.querySelector('.duration');
+        btnPlayPause.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        });
+        btnBackward.addEventListener('click', () => {
+            audio.currentTime = Math.max(0, audio.currentTime - 10);
+        });
+        btnForward.addEventListener('click', () => {
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
+        });
+        audio.addEventListener('play', () => {
+            btnPlayPause.querySelector('.icon').innerText = 'pause';
+        });
+        audio.addEventListener('pause', () => {
+            btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
+        });
+        audio.addEventListener('ended', () => {
+            btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
+        });
+        audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            const tsCurrent = formatSecondsToTimestamp(audio.currentTime);
+            const tsDuration = formatSecondsToTimestamp(audio.duration);
+            elProgress.value = percent;
+            elProgress.style.setProperty('--value', percent);
+            elTsCurrent.innerText = tsCurrent;
+            elTsDuration.innerText = tsDuration;
+        });
+        elProgress.addEventListener('input', () => {
+            const percent = elProgress.value;
+            elProgress.style.setProperty('--value', percent);
+            audio.currentTime = audio.duration * (percent / 100);
+        });
     } else {
         // Attempt to download file as text
         let text;
@@ -72,8 +285,8 @@ const previewFile = async data => {
         // If the file was too big or not text, prompt to download
         if (!text) {
             elPreviewContent.innerHTML = /*html*/`
-                <div class="card">
-                    <div class="body col">
+                <div class="card column">
+                    <div class="body">
                         <h3 style="text-align: center; margin: 0;">
                             This file can't be previewed.
                         </h3>

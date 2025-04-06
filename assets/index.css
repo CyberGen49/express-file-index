@@ -262,14 +262,6 @@ body[data-color-mode='light'] {
     overflow: hidden;
     filter: drop-shadow(0px 0px 16px rgba(0, 0, 0, 0.2));
 }
-#previewContent video,
-#previewContent img,
-#previewContent iframe {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 16px;
-}
 
 #previewContent .card {
     max-width: 1000px;
@@ -280,16 +272,10 @@ body[data-color-mode='light'] {
     border: 1px solid var(--c-border);
 }
 #previewContent .card > .body {
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     overflow: auto;
     padding: 20px 16px;
-}
-#previewContent .card > .body.col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
 }
 #previewContent .card > .body > *:first-child {
     margin-top: 0px;
@@ -297,7 +283,15 @@ body[data-color-mode='light'] {
 #previewContent .card > .body > *:last-child {
     margin-bottom: 0px;
 }
-#previewContent .card > pre.body {
+
+#previewContent .card.column > .body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+#previewContent .card.text > .body {
     background: none;
     border: none;
     margin: 0px;
@@ -306,6 +300,90 @@ body[data-color-mode='light'] {
     white-space: pre;
     display: block;
     padding: 12px;
+}
+
+#previewContent .card.image > .body,
+#previewContent .card.video > .body {
+    padding: 0px;
+    object-fit: contain;
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#previewContent .card.audio {
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+}
+#previewContent .card.audio > .body .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+}
+#previewContent .card.audio > .body .progress {
+    width: 100%;
+    max-width: 500px;
+}
+#previewContent .card.audio > .body .times {
+    display: flex;
+    font-size: 12px;
+    color: var(--c-text-secondary);
+}
+#previewContent .card.audio > .body .times .grow {
+    flex-grow: 1;
+}
+
+#previewContent .card.video > .body .overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
+}
+#previewContent .card.video > .body .overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+    transition: none;
+}
+
+#previewContent .card.video > .body .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+#previewContent .card.video > .body .controls .progress {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0px 12px;
+    background: var(--c-btn-secondary-bg);
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+#previewContent video,
+#previewContent img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
 }
 
 @media (max-width: 600px) {

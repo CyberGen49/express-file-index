@@ -28,6 +28,11 @@
     --syntax-keyword: #ff7b72;
     --syntax-string: #a5d6ff;
     --syntax-variable: #ffa657;
+    --c-slider-track-bg: hsl(0, 0%, 30%);
+    --c-slider-track-bg-filled: hsl(0, 0%, 80%);
+    --c-slider-thumb-bg: hsl(0, 0%, 100%);
+    --c-slider-thumb-bg-hover: hsl(0, 0%, 90%);
+    --c-slider-thumb-border: hsl(0, 0%, 100%);
 }
 
 /* Light colors */
@@ -249,6 +254,87 @@ th, td {
     border: 1px solid var(--c-border);
     padding: 8px 12px;
     line-height: 1.4;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px; /* Reduced track height */
+    background: transparent;
+    margin: 20px 0;
+    border-radius: 5px;
+    margin: 8px 0px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--c-slider-thumb-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--c-slider-thumb-border);
+    margin-top: -5.5px; /* Center thumb vertically */
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: var(--c-slider-thumb-bg-hover);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--c-slider-thumb-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--c-slider-thumb-border);
+    margin-top: -5.5px; /* Center thumb vertically */
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: var(--c-slider-thumb-bg-hover);
+}
+
+input[type="range"]::-ms-thumb {
+    width: 16px;
+    height: 16px;
+    background: var(--c-slider-thumb-bg);
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid var(--c-slider-thumb-border);
+    margin-top: -5.5px; /* Center thumb vertically */
+}
+
+input[type="range"]::-ms-thumb:hover {
+    background: var(--c-slider-thumb-bg-hover);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    background: linear-gradient(to right, var(--c-slider-track-bg-filled) 0%, var(--c-slider-track-bg-filled) calc(var(--value) * 1%), var(--c-slider-track-bg) calc(var(--value) * 1%), var(--c-slider-track-bg) 100%);
+    border-radius: 5px;
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    background: linear-gradient(to right, var(--c-slider-track-bg-filled) 0%, var(--c-slider-track-bg-filled) calc(var(--value) * 1%), var(--c-slider-track-bg) calc(var(--value) * 1%), var(--c-slider-track-bg) 100%);
+    border-radius: 5px;
+}
+
+input[type="range"]::-ms-track {
+    width: 100%;
+    height: 5px;
+    cursor: pointer;
+    background: linear-gradient(to right, var(--c-slider-track-bg-filled) 0%, var(--c-slider-track-bg-filled) calc(var(--value) * 1%), var(--c-slider-track-bg) calc(var(--value) * 1%), var(--c-slider-track-bg) 100%);
+    border-radius: 5px;
+    border-color: transparent;
+    border-width: 6px 0;
+    color: transparent;
 }
 
 .container {
