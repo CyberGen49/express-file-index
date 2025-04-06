@@ -272,7 +272,7 @@ body[data-color-mode='light'] {
 }
 
 #previewContent .card {
-    max-width: 100%;
+    max-width: 1000px;
     border-radius: 16px;
     max-height: 100%;
     overflow: hidden;
@@ -280,8 +280,8 @@ body[data-color-mode='light'] {
     border: 1px solid var(--c-border);
 }
 #previewContent .card > .body {
-    max-width: 1000px;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     overflow: auto;
     padding: 20px 16px;
 }

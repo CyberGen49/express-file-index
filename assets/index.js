@@ -88,7 +88,7 @@ const previewFile = async data => {
         } else if (types.md.includes(ext)) {
             const html = markdownToSafeHTML(text);
             elPreviewContent.innerHTML = /*html*/`
-                <div class="card">
+                <div class="card html">
                     <div class="body">${html}</div>
                 </div>
             `;
@@ -96,7 +96,7 @@ const previewFile = async data => {
         // Show text preview
         } else {
             elPreviewContent.innerHTML = /*html*/`
-                <div class="card">
+                <div class="card text">
                     <pre class="body"><code class="language-${ext}"></code></pre>
                 </div>
             `;
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items.push({
                     type: 'item',
                     icon: 'download',
-                    label: 'Download folder as zip',
+                    label: `Download folder as zip`,
                     onClick: () => {
                         window.location.href = entry.href + '?format=zip';
                     }
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items.push({
                     type: 'item',
                     icon: 'download',
-                    label: 'Download file',
+                    label: `Download file`,
                     onClick: () => {
                         const a = document.createElement('a');
                         a.href = entry.href;
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 items.push({
                     type: 'item',
                     icon: 'link',
-                    label: 'Copy clean alias file link',
+                    label: 'Copy clean file link',
                     onClick: () => {
                         navigator.clipboard.writeText(window.location.origin + data.pathAlias);
                     }

@@ -191,3 +191,5 @@ You can customize the file index UI by providing your own EJS template file via 
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.
 - `processTimeMs`: The number of milliseconds it took to process the request.
+
+This same data object is available by request with the `format=json` query parameter, if `allowJsonRequests` is `true`.

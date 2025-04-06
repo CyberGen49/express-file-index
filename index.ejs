@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <% if (data.ancestors.length) { %>
-        <title><%= data.dir.name %> - <%= data.serverName %></title>
+        <title><%= data.dir.name %> - <%= data.opts.serverName %></title>
         <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
     <% } else { %>
-        <title><%= data.serverName %></title>
-        <meta property="og:site_name" content="<%= data.serverName %>" />
+        <title><%= data.opts.serverName %></title>
+        <meta property="og:site_name" content="<%= data.opts.serverName %>" />
     <% } %>
     <meta property="og:title" content="<%= data.dir.name %>" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f2" />
@@ -114,7 +114,13 @@
             </div>
         </div>
         <div class="footer">
-            Processed <%= data.files.length %> files and directories <%= data.opts.statDirs ? '(recursively)' : '' %> in <%= data.processTimeMs %> ms
+            <%
+                let counts = {
+                    files: data.files.filter(f => !f.isDirectory).length,
+                    dirs: data.files.filter(f => f.isDirectory).length - 1
+                }
+            %>
+            Processed <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> and <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} directories` %> <%= data.opts.statDirs ? '(recursively)' : '' %> in <%= data.processTimeMs %> ms
             <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
         </div>
