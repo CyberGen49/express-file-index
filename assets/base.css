@@ -91,12 +91,16 @@ body {
 body, * {
     box-sizing: border-box;
     scrollbar-color: var(--c-border) transparent;
+    -webkit-text-size-adjust: 100%; /* For Safari */
+    text-size-adjust: 100%; /* For other browsers */
+    min-width: 0px;
 }
 
 h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
     margin: 1em 0px 0.6em 0px;
     padding-bottom: 0.2em;
+    line-height: 1.4;
 }
 h1, h2 {
     border-bottom: 1px solid var(--c-border);
