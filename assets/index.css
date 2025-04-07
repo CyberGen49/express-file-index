@@ -3,6 +3,8 @@ body[data-color-mode='dark'] {
     --c-bg-entry-hover: hsl(0, 0%, 15%);
     --c-preview-bg: hsla(0, 0%, 10%, 70%);
     --c-preview-card-bg: hsl(0, 0%, 12%);
+    --c-btn-control-bg: hsla(0, 0%, 20%, 80%);
+    --c-btn-control-bg-hover: hsla(0, 0%, 30%, 80%);
 }
 
 body[data-color-mode='light'] {
@@ -10,6 +12,8 @@ body[data-color-mode='light'] {
     --c-bg-entry-hover: hsl(0, 0%, 92%);
     --c-preview-bg: hsla(0, 0%, 95%, 70%);
     --c-preview-card-bg: hsl(0, 0%, 97%);
+    --c-btn-control-bg: hsla(0, 0%, 85%, 80%);
+    --c-btn-control-bg-hover: hsla(0, 0%, 75%, 80%);
 }
 
 .header {
@@ -218,7 +222,7 @@ body[data-color-mode='light'] {
     flex-direction: column;
     background: var(--c-preview-bg);
     backdrop-filter: blur(8px);
-    z-index: 101;
+    z-index: 90;
     opacity: 0;
     transition: opacity 0.1s ease-in-out;
 }
@@ -313,6 +317,9 @@ body[data-color-mode='light'] {
     width: 100%;
     height: 100%;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #previewContent .card.audio {
@@ -351,7 +358,7 @@ body[data-color-mode='light'] {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    padding: 12px;
+    padding: 8px;
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
 }
@@ -369,10 +376,20 @@ body[data-color-mode='light'] {
 #previewContent .card.video > .body .controls {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
 }
 
+#previewContent .card.video > .body .controls > * {
+    backdrop-filter: blur(8px);
+}
+#previewContent .card.video > .body .controls button {
+    background: var(--c-btn-control-bg);
+}
+#previewContent .card.video > .body .controls button:hover,
+#previewContent .card.video > .body .controls button:focus-visible {
+    background: var(--c-btn-control-bg-hover);
+}
 #previewContent .card.video > .body .controls .progress {
     flex-grow: 1;
     display: flex;
@@ -380,9 +397,10 @@ body[data-color-mode='light'] {
     gap: 8px;
     height: 36px;
     padding: 0px 12px;
-    background: var(--c-btn-secondary-bg);
+    background: var(--c-btn-control-bg);
     border-radius: 8px;
     font-size: 12px;
+    --c-slider-track-bg: var(--c-btn-control-bg-hover);
 }
 
 #previewContent video,

@@ -83,6 +83,16 @@ This will slow index loading if you have lots of files and/or slow storage.
 
 Defaults to `false`.
 
+### `string` `defaultFileSortType`
+The value by which files are sorted by default. Can be one of `name` (sort alphabetically by file name), `modified` (sort by modification time), or `size` (sort by size).
+
+Defaults to `name`.
+
+### `string` `defaultFileSortOrder`
+The direction in which to order files by default. Can be one of `asc` (ascending order) or `desc` (descending order). Descending order will reverse the order of the files after they're sorted.
+
+Defaults to `asc`.
+
 ### `boolean` `handle404`
 Whether to handle 404 errors by displaying a custom error page.
 
@@ -155,18 +165,28 @@ Defaults to `'MMM D, YYYY'`.
 
 ## Query Parameters
 
+Invalid values for these parameters will be ignored/defaulted.
+
 ### `format`
 Controls the format in which the file index is returned. Accepts one of the following values:
 
 - `json`: If the `allowJsonRequests` option is `true`, returns the file index data as a JSON object containing a single `data` property, which contains the data outlined in the [Customization](#customization) section below.
 - `zip`: If the `allowZipDownloads` option is `true`, returns an uncompressed zip file of the directory and all of its subdirectories.
 
-All other values for this parameter will be ignored.
+Defaults to the rendered EJS template.
 
 ### `preview`
 Instructs the file index UI to open a preview for a specified file on load. Accepts the name of a file immediately within the requested directory.
 
-This option will be ignored if the specified file name doesn't exist in the requested directory.
+### `sortType`
+Controls the value to sort files by. Accepts one of `name`, `modified`, `size`.
+
+Defaults to the value set for the `defaultFileSortType` option.
+
+### `sortOrder`
+Controls the direction files are sorted in. Accepts one of `asc`, `desc`.
+
+Defaults to the value set for the `defaultFileSortOrder` option.
 
 ## Customization
 

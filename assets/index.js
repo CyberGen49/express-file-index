@@ -56,6 +56,7 @@ const previewFile = async data => {
             </div>
         `;
     } else if (types.video.includes(ext)) {
+
         // Show video preview
         elPreviewContent.innerHTML = /*html*/`
             <div class="card video">
@@ -74,25 +75,21 @@ const previewFile = async data => {
                             <button class="btn secondary square fullscreen">
                                 <span class="icon">fullscreen</span>
                             </button>
-                            <button class="btn secondary square menu">
-                                <span class="icon">more_vert</span>
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
+
         const video = elPreviewContent.querySelector('video');
         const btnPlayPause = elPreviewContent.querySelector('.playPause');
         const btnFullscreen = elPreviewContent.querySelector('.fullscreen');
-        const btnMenu = elPreviewContent.querySelector('.menu');
         const elProgress = elPreviewContent.querySelector('.progress input[type="range"]');
         const elTsCurrent = elPreviewContent.querySelector('.progress .current');
         const elTsDuration = elPreviewContent.querySelector('.progress .duration');
         const overlay = elPreviewContent.querySelector('.overlay');
 
         let controlsTimeout;
-
         const showControls = () => {
             overlay.classList.add('visible');
             clearTimeout(controlsTimeout);
@@ -100,7 +97,6 @@ const previewFile = async data => {
                 hideControls();
             }, 3000);
         };
-
         const hideControls = () => {
             if (!video.paused) {
                 overlay.classList.remove('visible');
@@ -108,36 +104,21 @@ const previewFile = async data => {
                 showControls();
             }
         };
+        const toggleControls = () => {
+            if (overlay.classList.contains('visible')) {
+                hideControls();
+            } else {
+                showControls();
+            }
+        };
 
-        video.addEventListener('mousemove', showControls);
-        overlay.addEventListener('mousemove', showControls);
-        overlay.addEventListener('mouseleave', hideControls);
-
-        btnMenu.addEventListener('click', (e) => {
-            e.preventDefault();
-            const items = [
-                {
-                    type: 'item',
-                    label: '0.5x',
-                    onClick: () => video.playbackRate = 0.5
-                },
-                {
-                    type: 'item',
-                    label: '1x (Normal)',
-                    onClick: () => video.playbackRate = 1
-                },
-                {
-                    type: 'item',
-                    label: '1.5x',
-                    onClick: () => video.playbackRate = 1.5
-                },
-                {
-                    type: 'item',
-                    label: '2x',
-                    onClick: () => video.playbackRate = 2
-                },
-            ];
-            showContextMenu({ items });
+        overlay.addEventListener('mousemove', () => {
+            if (matchMedia('(hover: none)').matches) return;
+            showControls();
+        });
+        overlay.addEventListener('mouseleave', () => {
+            if (matchMedia('(hover: none)').matches) return;
+            hideControls();
         });
 
         btnPlayPause.addEventListener('click', () => {
@@ -155,6 +136,7 @@ const previewFile = async data => {
             btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
             showControls();
         });
+
         video.addEventListener('timeupdate', () => {
             const percent = (video.currentTime / video.duration) * 100;
             const tsCurrent = formatSecondsToTimestamp(video.currentTime);
@@ -169,9 +151,12 @@ const previewFile = async data => {
             elProgress.style.setProperty('--value', percent);
             video.currentTime = video.duration * (percent / 100);
         });
+
         btnFullscreen.addEventListener('click', () => {
             const container = elPreviewContent.querySelector('.card.video .body');
-            if (container.requestFullscreen) {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else if (container.requestFullscreen) {
                 container.requestFullscreen();
             } else if (container.webkitRequestFullscreen) {
                 container.webkitRequestFullscreen();
@@ -179,19 +164,24 @@ const previewFile = async data => {
                 container.msRequestFullscreen();
             }
         });
+
         overlay.addEventListener('click', (e) => {
-            if (matchMedia('(hover: none)').matches) {
-                return;
-            }
             if (e.target === overlay) {
-                if (video.paused) {
-                    video.play();
+                const canHover = !matchMedia('(hover: none)').matches;
+                if (canHover) {
+                    if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
                 } else {
-                    video.pause();
+                    toggleControls();
                 }
             }
         });
+
     } else if (types.audio.includes(ext)) {
+
         // Show audio preview
         elPreviewContent.innerHTML = /*html*/`
             <div class="card audio">
@@ -219,6 +209,7 @@ const previewFile = async data => {
                 </div>
             </div>
         `;
+
         const audio = elPreviewContent.querySelector('audio');
         const btnPlayPause = elPreviewContent.querySelector('.playPause');
         const btnBackward = elPreviewContent.querySelector('.backward');
@@ -226,6 +217,7 @@ const previewFile = async data => {
         const elProgress = elPreviewContent.querySelector('.progress input[type="range"]');
         const elTsCurrent = elPreviewContent.querySelector('.current');
         const elTsDuration = elPreviewContent.querySelector('.duration');
+
         btnPlayPause.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play();
@@ -233,21 +225,21 @@ const previewFile = async data => {
                 audio.pause();
             }
         });
+
         btnBackward.addEventListener('click', () => {
             audio.currentTime = Math.max(0, audio.currentTime - 10);
         });
         btnForward.addEventListener('click', () => {
             audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
         });
+        
         audio.addEventListener('play', () => {
             btnPlayPause.querySelector('.icon').innerText = 'pause';
         });
         audio.addEventListener('pause', () => {
             btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
         });
-        audio.addEventListener('ended', () => {
-            btnPlayPause.querySelector('.icon').innerText = 'play_arrow';
-        });
+
         audio.addEventListener('timeupdate', () => {
             const percent = (audio.currentTime / audio.duration) * 100;
             const tsCurrent = formatSecondsToTimestamp(audio.currentTime);
@@ -262,6 +254,7 @@ const previewFile = async data => {
             elProgress.style.setProperty('--value', percent);
             audio.currentTime = audio.duration * (percent / 100);
         });
+
     } else {
         // Attempt to download file as text
         let text;
@@ -314,34 +307,6 @@ const previewFile = async data => {
     // Show preview dialog
     openPreview();
 }
-
-document.addEventListener('keydown', (e) => {
-    if (document.activeElement.tagName === 'INPUT') return;
-    const elPreviewContent = document.querySelector('#previewContent');
-    const media = elPreviewContent.querySelector('video') || elPreviewContent.querySelector('audio');
-    switch (e.key) {
-        case ' ':
-            if (!media) break;
-            e.preventDefault();
-            if (media.paused) {
-                media.play();
-            } else {
-                media.pause();
-            }
-            break;
-        case 'ArrowRight':
-            if (!media) break;
-            media.currentTime = Math.min(media.duration, media.currentTime + 10);
-            break;
-        case 'ArrowLeft':
-            if (!media) break;
-            media.currentTime = Math.max(0, media.currentTime - 10);
-            break;
-        case 'Escape':
-            closePreview();
-            break;
-    }
-});
 
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -497,69 +462,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnSort) {
         btnSort.addEventListener('click', () => {
             const url = new URL(window.location.href);
-            const currentSortType = url.searchParams.get('sortType') || 'name';
-            const currentSortOrder = url.searchParams.get('sortOrder') || 'asc';
+            const defaultSortType = document.body.dataset.defaultSortType;
+            const defaultSortOrder = document.body.dataset.defaultSortOrder;
+            const currentSortType = url.searchParams.get('sortType') || defaultSortType;
+            const currentSortOrder = url.searchParams.get('sortOrder') || defaultSortOrder;
             const currentSort = `${currentSortType}-${currentSortOrder}`;
+            const setSort = (type, order) => {
+                if (defaultSortType == type) {
+                    url.searchParams.delete('sortType');
+                } else {
+                    url.searchParams.set('sortType', type);
+                }
+                if (defaultSortOrder == order) {
+                    url.searchParams.delete('sortOrder');
+                } else {
+                    url.searchParams.set('sortOrder', order);
+                }
+                window.location.href = url.toString();
+            }
             const items = [
                 {
                     type: 'item',
                     label: 'Sort by name A-Z',
                     icon: currentSort == 'name-asc' ? 'radio_button_checked' : 'radio_button_unchecked',
-                    onClick: () => {
-                        url.searchParams.delete('sortType');
-                        url.searchParams.delete('sortOrder');
-                        window.location.href = url.toString();
-                    }
+                    onClick: () => setSort('name', 'asc')
                 },
                 {
                     type: 'item',
                     label: 'Sort by name Z-A',
                     icon: currentSort == 'name-desc' ? 'radio_button_checked' : 'radio_button_unchecked',
-                    onClick: () => {
-                        url.searchParams.delete('sortType');
-                        url.searchParams.set('sortOrder', 'desc');
-                        window.location.href = url.toString();
-                    }
+                    onClick: () => setSort('name', 'desc')
                 },
                 {
                     type: 'item',
                     label: 'Sort oldest to newest',
                     icon: currentSort == 'modified-asc' ? 'radio_button_checked' : 'radio_button_unchecked',
-                    onClick: () => {
-                        url.searchParams.set('sortType', 'modified');
-                        url.searchParams.delete('sortOrder');
-                        window.location.href = url.toString();
-                    }
+                    onClick: () => setSort('modified', 'asc')
                 },
                 {
                     type: 'item',
                     label: 'Sort newest to oldest',
                     icon: currentSort == 'modified-desc' ? 'radio_button_checked' : 'radio_button_unchecked',
-                    onClick: () => {
-                        url.searchParams.set('sortType', 'modified');
-                        url.searchParams.set('sortOrder', 'desc');
-                        window.location.href = url.toString();
-                    }
+                    onClick: () => setSort('modified', 'desc')
                 },
                 {
                     type: 'item',
                     label: 'Sort smallest to largest',
                     icon: currentSort == 'size-asc' ? 'radio_button_checked' : 'radio_button_unchecked',
-                    onClick: () => {
-                        url.searchParams.set('sortType', 'size');
-                        url.searchParams.delete('sortOrder');
-                        window.location.href = url.toString();
-                    }
+                    onClick: () => setSort('size', 'asc')
                 },
                 {
                     type: 'item',
                     label: 'Sort largest to smallest',
                     icon: currentSort == 'size-desc' ? 'radio_button_checked' : 'radio_button_unchecked',
-                    onClick: () => {
-                        url.searchParams.set('sortType', 'size');
-                        url.searchParams.set('sortOrder', 'desc');
-                        window.location.href = url.toString();
-                    }
+                    onClick: () => setSort('size', 'desc')
                 }
             ];
             showContextMenu({ items });
@@ -594,4 +550,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 window.addEventListener('popstate', () => {
     closePreview();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT') return;
+    const elPreviewContent = document.querySelector('#previewContent');
+    const media = elPreviewContent.querySelector('video') || elPreviewContent.querySelector('audio');
+    switch (e.key) {
+        case ' ':
+            if (!media) break;
+            e.preventDefault();
+            if (media.paused) {
+                media.play();
+            } else {
+                media.pause();
+            }
+            break;
+        case 'ArrowRight':
+            if (!media) break;
+            media.currentTime = Math.min(media.duration, media.currentTime + 10);
+            break;
+        case 'ArrowLeft':
+            if (!media) break;
+            media.currentTime = Math.max(0, media.currentTime - 10);
+            break;
+        case 'Escape':
+            closePreview();
+            break;
+    }
+});
+
+document.addEventListener('fullscreenchange', () => {
+    const elPreview = document.querySelector('#preview');
+    const btnFullscreen = elPreview.querySelector('.fullscreen');
+    if (btnFullscreen) {
+        const isFullscreen = !!document.fullscreenElement;
+        btnFullscreen.querySelector('.icon').innerText = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+    }
 });

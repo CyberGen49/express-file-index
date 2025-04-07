@@ -30,6 +30,22 @@ const archiver = require('archiver');
  * This will slow index loading if you have lots of files and/or slow storage.
  * 
  * Defaults to `false`.
+ * @property {'name'|'modified'|'size'} defaultFileSortType
+ * The value by which files are sorted by default. Can be one of `name` (sort alphabetically by file name), `modified` (sort by modification time), or `size` (sort by size).
+ * 
+ * See the `defaultFileSortOrder` option to reverse the order of the files after they're sorted, if you need files sorted newest first, for example.
+ * 
+ * This value can be set per request with the `sortType` query parameter.
+ * 
+ * Defaults to `name`.
+ * @property {'asc'|'desc'} defaultFileSortOrder
+ * The direction in which to order files by default. Can be one of `asc` (ascending order) or `desc` (descending order). Descending order will reverse the order of the files after they're sorted.
+ * 
+ * See the `defaultFileSortType` option to change the value by which files are sorted.
+ * 
+ * This value can be set per request with the `sortOrder` query parameter.
+ * 
+ * Defaults to `asc`.
  * @property {boolean} handle404
  * Whether to handle 404 errors by displaying a custom error page.
  * 
@@ -119,16 +135,18 @@ const defaultOpts = {
     hiddenFilePrefixes: [ '.', '_' ],
     indexFiles: [ 'index.html' ],
     statDirs: false,
+    defaultFileSortType: 'name',
+    defaultFileSortOrder: 'asc',
     handle404: false,
     handle404Document: path.join(__dirname, '404.html'),
     allowZipDownloads: false,
-    ejsFilePath: path.join(__dirname, 'index.ejs'),
-    fileTimeFormat: 'MMM D, YYYY',
-    enableLogging: false,
+    allowJsonRequests: false,
     allowCleanPathAliases: false,
     forceCleanPathAliases: false,
+    enableLogging: false,
+    ejsFilePath: path.join(__dirname, 'index.ejs'),
     fileSelectAction: 'preview',
-    allowJsonRequests: false
+    fileTimeFormat: 'MMM D, YYYY'
 };
 
 /**
@@ -455,8 +473,8 @@ module.exports = (options = {}) => async (req, res, next) => {
     }
 
     // Sort and combine files
-    const sortType = req.query.sortType || 'name';
-    const sortOrder = req.query.sortOrder || 'asc';
+    const sortType = req.query.sortType || opts.defaultFileSortType;
+    const sortOrder = req.query.sortOrder || opts.defaultFileSortOrder;
     const sortFunctions = {
         name: (a, b) => a.name.localeCompare(b.name, {
             sensitivity: 'base'

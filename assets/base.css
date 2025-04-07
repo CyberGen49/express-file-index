@@ -65,6 +65,11 @@
     --syntax-keyword: #cf222e;
     --syntax-string: #0a3069;
     --syntax-variable: #953800;
+    --c-slider-track-bg: hsl(0, 0%, 70%);
+    --c-slider-track-bg-filled: hsl(0, 0%, 20%);
+    --c-slider-thumb-bg: hsl(0, 0%, 30%);
+    --c-slider-thumb-bg-hover: hsl(0, 0%, 40%);
+    --c-slider-thumb-border: hsl(0, 0%, 45%);
 }
 
 body {

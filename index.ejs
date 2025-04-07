@@ -30,7 +30,7 @@
     <script src="?expressFileIndexAsset=base.js"></script>
     <script src="?expressFileIndexAsset=index.js" defer></script>
 </head>
-<body data-color-mode="dark" data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-file-time-format="<%= data.opts.fileTimeFormat %>" data-file-select-action="<%= data.opts.fileSelectAction %>">
+<body data-color-mode="dark" data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-file-time-format="<%= data.opts.fileTimeFormat %>" data-file-select-action="<%= data.opts.fileSelectAction %>" data-default-sort-type="<%= data.opts.defaultFileSortType %>" data-default-sort-order="<%= data.opts.defaultFileSortOrder %>">
     <div class="container">
         <div class="header">
             <% if (data.ancestors.length) { %>
@@ -120,7 +120,7 @@
                     dirs: data.files.filter(f => f.isDirectory).length - 1
                 }
             %>
-            Processed <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> and <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} directories` %> <%= data.opts.statDirs ? '(recursively)' : '' %> in <%= data.processTimeMs %> ms
+            Processed <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> and <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} folders` %> <%= data.opts.statDirs ? '(recursively)' : '' %> in <%= data.processTimeMs %> ms
             <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
         </div>
