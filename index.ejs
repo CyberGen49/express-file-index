@@ -120,7 +120,7 @@
                     dirs: data.files.filter(f => f.isDirectory).length - 1
                 }
             %>
-            Processed <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> and <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} folders` %> <%= data.opts.statDirs ? '(recursively)' : '' %> in <%= data.processTimeMs %> ms
+            Processed <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} folders` %> and <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> in <%= data.processTimeMs %> ms
             <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
         </div>
