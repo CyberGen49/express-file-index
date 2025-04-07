@@ -4,7 +4,7 @@
 
 ![Screenshot of both themes](./promo.png)
 
-I use this project for my personal file server. Check it out [here](https://files.cybah.me/)!
+I use this project for my personal file server. See it in practice [here](https://files.cybah.me/)!
 
 ## Features
 

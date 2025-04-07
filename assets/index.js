@@ -413,30 +413,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 items.push({ type: 'separator' });
             }
-            if (data.path == data.pathAlias) {
-                items.push({
-                    type: 'item',
-                    icon: 'link',
-                    label: 'Copy default file link',
-                    onClick: () => {
-                        navigator.clipboard.writeText(window.location.origin + data.pathTrue);
-                    }
-                });
+            items.push({
+                type: 'item',
+                icon: 'link',
+                label: 'Copy file preview link',
+                onClick: () => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('preview', data.name);
+                    navigator.clipboard.writeText(url.toString());
+                }
+            });
+            items.push({
+                type: 'item',
+                icon: 'link',
+                label: 'Copy direct file link',
+                onClick: () => {
+                    navigator.clipboard.writeText(window.location.origin + data.pathTrue);
+                }
+            });
+            if (data.pathAlias) {
                 items.push({
                     type: 'item',
                     icon: 'link',
                     label: 'Copy clean file link',
                     onClick: () => {
                         navigator.clipboard.writeText(window.location.origin + data.pathAlias);
-                    }
-                });
-            } else {
-                items.push({
-                    type: 'item',
-                    icon: 'link',
-                    label: 'Copy link',
-                    onClick: () => {
-                        navigator.clipboard.writeText(entry.href);
                     }
                 });
             }
