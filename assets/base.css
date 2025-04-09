@@ -236,7 +236,7 @@ code .token.attr-value {
 code .token.punctuation,
 code .token.inserted,
 code .token.interpolation-punctuation {
-    color: var(--f1) !important
+    color: var(--c-text-normal) !important
 }
 code .token.bold {
     font-weight: bold;
