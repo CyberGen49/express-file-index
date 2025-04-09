@@ -136,6 +136,12 @@ a:focus-visible {
     color: var(--c-text-normal);
 }
 
+hr {
+    border: none;
+    border-top: 1px solid var(--c-border);
+    margin: 1em 0px;
+}
+
 pre {
     padding: 12px;
     border-radius: 8px;
