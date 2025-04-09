@@ -9,7 +9,7 @@ const closePreview = () => {
     // Remove query string
     const url = new URL(window.location.href);
     url.searchParams.delete('preview');
-    history.pushState({}, '', url.toString());
+    history.replaceState({}, '', url.toString());
 }
 
 const openPreview = () => {
@@ -35,13 +35,26 @@ const previewFile = async data => {
     elPreviewFileModified.innerText = dayjs(data.modified).format(document.body.dataset.fileTimeFormat);
     elPreviewFileModified.title = dayjs(data.modified).format('YYYY-MM-DD HH:mm:ss');
     elPreviewDownload.href = data.pathTrue;
+    const htmlFallback = /*html*/`
+        <div class="card column">
+            <div class="body">
+                <h3 style="text-align: center; margin: 0;">
+                    This file can't be previewed.
+                </h3>
+                <a href="${data.pathTrue}" download class="btn" onClick="closePreview()">
+                    <span class="icon">download</span>
+                    Download file - ${formatBytes(data.size)}
+                </a>
+            </div>
+        </div>
+    `;
     // Define all web browser supported file types
     const maxTextSize = 1024 * 1024 * 1; // 1 MiB
     const ext = data.name.split('.').pop().toLowerCase();
     const types = {
         image: [ 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg' ],
         video: [ 'mp4', 'webm' ],
-        audio: [ 'mp3', 'wav', 'ogg', 'aac' ],
+        audio: [ 'mp3', 'wav', 'ogg', 'aac', 'wav' ],
         md: [ 'md', 'markdown' ],
         html: [ 'html', 'htm' ]
     }
@@ -55,12 +68,16 @@ const previewFile = async data => {
                 </div>
             </div>
         `;
+        const img = elPreviewContent.querySelector('img');
+        img.addEventListener('error', () => {
+            elPreviewContent.innerHTML = htmlFallback;
+        });
     } else if (types.video.includes(ext)) {
 
         // Show video preview
         elPreviewContent.innerHTML = /*html*/`
             <div class="card video">
-                <div class="body">
+                <div class="body" data-color-mode="dark">
                     <video autoplay src="${data.pathTrue}"></video>
                     <div class="overlay visible">
                         <div class="controls">
@@ -88,6 +105,10 @@ const previewFile = async data => {
         const elTsCurrent = elPreviewContent.querySelector('.progress .current');
         const elTsDuration = elPreviewContent.querySelector('.progress .duration');
         const overlay = elPreviewContent.querySelector('.overlay');
+
+        video.addEventListener('error', () => {
+            elPreviewContent.innerHTML = htmlFallback;
+        });
 
         let controlsTimeout;
         const showControls = () => {
@@ -218,6 +239,10 @@ const previewFile = async data => {
         const elTsCurrent = elPreviewContent.querySelector('.current');
         const elTsDuration = elPreviewContent.querySelector('.duration');
 
+        audio.addEventListener('error', () => {
+            elPreviewContent.innerHTML = htmlFallback;
+        });
+
         btnPlayPause.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play();
@@ -263,19 +288,7 @@ const previewFile = async data => {
         }
         // If the file was too big or not text, prompt to download
         if (!text) {
-            elPreviewContent.innerHTML = /*html*/`
-                <div class="card column">
-                    <div class="body">
-                        <h3 style="text-align: center; margin: 0;">
-                            This file can't be previewed.
-                        </h3>
-                        <a href="${data.pathTrue}" download class="btn" onClick="closePreview()">
-                            <span class="icon">download</span>
-                            Download file - ${formatBytes(data.size)}
-                        </a>
-                    </div>
-                </div>
-            `;
+            elPreviewContent.innerHTML = htmlFallback;
         // Show markdown preview
         } else if (types.md.includes(ext)) {
             const html = markdownToSafeHTML(text);
@@ -293,11 +306,11 @@ const previewFile = async data => {
                 </div>
             `;
             const elCode = elPreviewContent.querySelector('code');
-            let highlightedHtml = text;
+            let htmlHighlighted = text;
             try {
-                highlightedHtml = Prism.highlight(text, Prism.languages[ext], ext);
+                htmlHighlighted = Prism.highlight(text, Prism.languages[ext], ext);
             } catch (error) {}
-            elCode.innerHTML = highlightedHtml;
+            elCode.innerHTML = htmlHighlighted;
         }
     }
     // Set query string

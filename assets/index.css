@@ -1,4 +1,4 @@
-body[data-color-mode='dark'] {
+[data-color-mode='dark'] {
     --c-readme-bg: hsl(0, 0%, 12%);
     --c-bg-entry-hover: hsl(0, 0%, 15%);
     --c-preview-bg: hsla(0, 0%, 10%, 70%);
@@ -7,7 +7,7 @@ body[data-color-mode='dark'] {
     --c-btn-control-bg-hover: hsla(0, 0%, 30%, 80%);
 }
 
-body[data-color-mode='light'] {
+[data-color-mode='light'] {
     --c-readme-bg: hsl(0, 0%, 97%);
     --c-bg-entry-hover: hsl(0, 0%, 92%);
     --c-preview-bg: hsla(0, 0%, 95%, 70%);
@@ -401,6 +401,7 @@ body[data-color-mode='light'] {
     background: var(--c-btn-control-bg);
     border-radius: 8px;
     font-size: 12px;
+    color: var(--c-text-normal);
     --c-slider-track-bg: var(--c-btn-control-bg-hover);
 }
 
