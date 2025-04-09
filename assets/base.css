@@ -20,19 +20,19 @@
     --c-contextmenu-item-border-hover: hsl(0, 0%, 35%);
     --c-table-header-bg: hsl(0, 0%, 18%);
     --c-code-bg: hsl(0, 0%, 15%);
-    --syntax-comment: #8b949e;
-    --syntax-constant: #79c0ff;
-    --syntax-entity: #d2a8ff;
-    --syntax-storage-modifier-import: #c9d1d9;
-    --syntax-entity-tag: #7ee787;
-    --syntax-keyword: #ff7b72;
-    --syntax-string: #a5d6ff;
-    --syntax-variable: #ffa657;
     --c-slider-track-bg: hsl(0, 0%, 30%);
     --c-slider-track-bg-filled: hsl(0, 0%, 80%);
     --c-slider-thumb-bg: hsl(0, 0%, 100%);
     --c-slider-thumb-bg-hover: hsl(0, 0%, 90%);
     --c-slider-thumb-border: hsl(0, 0%, 100%);
+    --c-syntax-comment: #8b949e;
+    --c-syntax-constant: #79c0ff;
+    --c-syntax-entity: #d2a8ff;
+    --c-syntax-storage-modifier-import: #c9d1d9;
+    --c-syntax-entity-tag: #7ee787;
+    --c-syntax-keyword: #ff7b72;
+    --c-syntax-string: #a5d6ff;
+    --c-syntax-variable: #ffa657;
 }
 
 /* Light colors */
@@ -57,19 +57,19 @@
     --c-contextmenu-item-border-hover: hsl(0, 0%, 80%);
     --c-table-header-bg: hsl(0, 0%, 90%);
     --c-code-bg: hsl(0, 0%, 95%);
-    --syntax-comment: #6e7781;
-    --syntax-constant: #0550ae;
-    --syntax-entity: #8250df;
-    --syntax-storage-modifier-import: #24292f;
-    --syntax-entity-tag: #116329;
-    --syntax-keyword: #cf222e;
-    --syntax-string: #0a3069;
-    --syntax-variable: #953800;
     --c-slider-track-bg: hsl(0, 0%, 70%);
     --c-slider-track-bg-filled: hsl(0, 0%, 20%);
     --c-slider-thumb-bg: hsl(0, 0%, 30%);
     --c-slider-thumb-bg-hover: hsl(0, 0%, 40%);
     --c-slider-thumb-border: hsl(0, 0%, 45%);
+    --c-syntax-comment: #6e7781;
+    --c-syntax-constant: #0550ae;
+    --c-syntax-entity: #8250df;
+    --c-syntax-storage-modifier-import: #24292f;
+    --c-syntax-entity-tag: #116329;
+    --c-syntax-keyword: #cf222e;
+    --c-syntax-string: #0a3069;
+    --c-syntax-variable: #953800;
 }
 
 body {
@@ -170,7 +170,7 @@ code .token.deleted,
 code .token.prolog,
 code .token.doctype,
 code .token.cdata {
-    color: var(--syntax-comment) !important
+    color: var(--c-syntax-comment) !important
 }
 .cm-header,
 .cm-def,
@@ -181,31 +181,32 @@ code .token.cdata {
 .cm-atom,
 .cm-qualifier,
 .cm-attribute,
+code .token.class,
 code .token.builtin,
 code .token.property,
 code .token.attr-name,
 code .token.boolean,
 code .token.number,
 code .token.constant {
-    color: var(--syntax-constant) !important
+    color: var(--c-syntax-constant) !important
 }
 .cm-variable-2,
 .cm-type,
 code .token.color,
 code .token.variable {
-    color: var(--syntax-variable) !important
+    color: var(--c-syntax-variable) !important
 }
 .cm-calle,
 code .token.function,
 code .token.symbol,
 code .token.entity {
-    color: var(--syntax-entity) !important
+    color: var(--c-syntax-entity) !important
 }
 .cm-tag,
 code .token.class-name,
 code .token.selector,
 code .token.tag {
-    color: var(--syntax-entity-tag) !important
+    color: var(--c-syntax-entity-tag) !important
 }
 .cm-keyword,
 .cm-operator,
@@ -214,7 +215,7 @@ code .token.keyword,
 code .token.operator,
 code .token.atrule,
 code .token.unit {
-    color: var(--syntax-keyword) !important
+    color: var(--c-syntax-keyword) !important
 }
 .cm-quote,
 .cm-string, .cm-string-2,
@@ -224,7 +225,7 @@ code .token.char,
 code .token.regex,
 code .token.url,
 code .token.attr-value {
-    color: var(--syntax-string) !important
+    color: var(--c-syntax-string) !important
 }
 .cm-property,
 .cm-positive,
