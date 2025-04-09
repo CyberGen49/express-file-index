@@ -207,6 +207,7 @@ You can customize the file index UI by providing your own EJS template file via 
   - `string` `icon` A [Google Material Symbol](https://fonts.google.com/icons) name
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
+- `packageVersion`: The `express-file-index` version.
 - `nodejsVersion`: The Node.js version.
 - `osPlatform`: The operating system platform.
 - `osArch`: The operating system architecture.

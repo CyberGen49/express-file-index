@@ -121,7 +121,7 @@
                 }
             %>
             Processed <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} folders` %> and <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> in <%= data.processTimeMs %> ms
-            <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a>
+            <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a> v<%= data.packageVersion %>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
         </div>
     </div>

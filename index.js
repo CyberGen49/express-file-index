@@ -534,6 +534,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         files,
         sortType,
         sortOrder,
+        packageVersion: require(path.join(__dirname, 'package.json')).version,
         nodejsVersion: process.version,
         osPlatform: process.platform,
         osArch: process.arch,
