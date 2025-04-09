@@ -1,5 +1,8 @@
 # Express File Index
 
+![GitHub last commit](https://img.shields.io/github/last-commit/CyberGen49/express-file-index) ![NPM Version](https://img.shields.io/npm/v/express-file-index)
+ ![NPM Downloads](https://img.shields.io/npm/dw/express-file-index)
+
 `express-file-index` is an Express middleware that serves static files and provides a navigable file index for directories. It's designed to be lightweight, customizable, and easy to integrate into existing Express apps.
 
 ![Screenshot of both themes](./promo.png)
