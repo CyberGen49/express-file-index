@@ -324,6 +324,11 @@ module.exports = (options = {}) => async (req, res, next) => {
         return res.sendFile(pathAbs);
     }
     
+    // Redirect directory requests without a trailing slash to include it
+    if (!req.path.endsWith('/')) {
+        return res.redirect(301, req.path + '/');
+    }
+    
     // Zip and send if requested and enabled
     if (req.query.format == 'zip' && opts.allowZipDownloads) {
         log(`Requested zip download of directory: ${pathAbs}`);
@@ -457,12 +462,13 @@ module.exports = (options = {}) => async (req, res, next) => {
         ) || 'file';
 
         // Add to list
+        const trailingSlash = (isDirectory && filePathRel != '/') ? '/' : '';
         const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) : null;
         (isDirectory ? dirsOnly : filesOnly).push({
             name: fileName,
-            path: opts.forceCleanPathAliases ? filePathRelAlias : filePathRel,
-            pathAlias: filePathRelAlias,
-            pathTrue: filePathRel,
+            path: (opts.forceCleanPathAliases ? filePathRelAlias : filePathRel) + trailingSlash,
+            pathAlias: filePathRelAlias + trailingSlash,
+            pathTrue: filePathRel + trailingSlash,
             isDirectory,
             size,
             modified,
