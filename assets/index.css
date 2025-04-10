@@ -145,27 +145,64 @@
     flex-shrink: 0;
 }
 
-.files .entry .icon.folder {
+.files .entry .icon.folder,
+.contextMenu .file .icon.folder {
     color: var(--c-icon-folder);
 }
-.files .entry .icon.text {
+.files .entry .icon.text,
+.contextMenu .file .icon.text {
     color: var(--c-icon-text);
 }
-.files .entry .icon.image {
+.files .entry .icon.image,
+.contextMenu .file .icon.image {
     color: var(--c-icon-image);
 }
-.files .entry .icon.video {
+.files .entry .icon.video,
+.contextMenu .file .icon.video {
     color: var(--c-icon-video);
 }
-.files .entry .icon.audio {
+.files .entry .icon.audio,
+.contextMenu .file .icon.audio {
     color: var(--c-icon-audio);
 }
-.files .entry .icon.file {
+.files .entry .icon.file,
+.contextMenu .file .icon.file {
     color: var(--c-icon-file);
 }
 
 .files .entry .modified,
 .files .entry .size {
+    color: var(--c-text-secondary);
+}
+
+.contextMenu > .file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 300px;
+    padding: 8px;
+}
+.contextMenu > .file .icon {
+    width: 32px;
+    text-align: center;
+    font-size: 32px;
+    flex-shrink: 0;
+    font-family: 'Material Symbols Outlined';
+}
+.contextMenu > .file .details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-grow: 1;
+    min-width: 0px;
+}
+.contextMenu > .file .name {
+    font-size: 14px;
+    color: var(--c-text-normal);
+}
+.contextMenu > .file .modified,
+.contextMenu > .file .size {
+    font-size: 12px;
     color: var(--c-text-secondary);
 }
 

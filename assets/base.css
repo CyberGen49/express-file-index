@@ -422,6 +422,7 @@ input[type="range"]::-ms-track {
     box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.2);
     z-index: 100;
     scrollbar-width: none;
+    user-select: none;
 }
 .contextMenu::backdrop {
     background: transparent;

@@ -406,6 +406,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     const limit = 1000;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * limit;
+    let previewFile = null;
 
     for (let i = 0; i < Math.min(fileNames.length, limit); i++) {
         const fileName = fileNames[i + offset];
@@ -464,7 +465,8 @@ module.exports = (options = {}) => async (req, res, next) => {
         // Add to list
         const trailingSlash = (isDirectory && filePathRel != '/') ? '/' : '';
         const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) : null;
-        (isDirectory ? dirsOnly : filesOnly).push({
+        const fileNameAlias = getFileNameAlias(fileName);
+        const data = {
             name: fileName,
             path: (opts.forceCleanPathAliases ? filePathRelAlias : filePathRel) + trailingSlash,
             pathAlias: filePathRelAlias + trailingSlash,
@@ -474,7 +476,16 @@ module.exports = (options = {}) => async (req, res, next) => {
             modified,
             type: fileType,
             icon: typeIcons[fileType]
-        });
+        };
+        (isDirectory ? dirsOnly : filesOnly).push(data);
+
+        // Save preview file data if requested
+        const previewFileName = req.query.preview;
+        if (!isDirectory && req.query.preview) {
+            if (fileNameAlias == previewFileName || fileName == previewFileName) {
+                previewFile = data;
+            }
+        }
 
     }
 
@@ -540,6 +551,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         files,
         sortType,
         sortOrder,
+        previewFile,
         packageVersion: require(path.join(__dirname, 'package.json')).version,
         nodejsVersion: process.version,
         osPlatform: process.platform,

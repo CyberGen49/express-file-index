@@ -106,7 +106,8 @@ const showContextMenu = (options, shouldPosition = true) => {
             }
         }
     }
-    elMenu.addEventListener('click', () => {
+    elMenu.addEventListener('click', (e) => {
+        if (e.target !== elMenu) return;
         elMenu.close();
     });
     elMenu.addEventListener('keydown', (e) => {

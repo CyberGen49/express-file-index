@@ -5,12 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <% if (data.ancestors.length) { %>
         <title><%= data.dir.name %> - <%= data.opts.serverName %></title>
-        <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
     <% } else { %>
         <title><%= data.opts.serverName %></title>
-        <meta property="og:site_name" content="<%= data.opts.serverName %>" />
     <% } %>
-    <meta property="og:title" content="<%= data.dir.name %>" />
+    <% if (data.previewFile) { %>
+        <meta property="og:site_name" content="<%=
+            [ ...data.ancestors.map(e => e.name), data.dir.name ].join(' > ')
+        %>" />
+        <meta property="og:title" content="<%= data.previewFile.name %>" />
+        <% if (data.previewFile.type == 'image') { %>
+            <meta property="og:image" content="<%= data.previewFile.pathTrue %>" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="<%= data.previewFile.name %>" />
+            <meta name="twitter:image" content="<%= data.previewFile.pathTrue %>" />
+        <% } else if (data.previewFile.type == 'video') { %>
+            <meta property="og:video" content="<%= data.previewFile.pathTrue %>" />
+            <meta name="twitter:card" content="player" />
+            <meta name="twitter:title" content="<%= data.previewFile.name %>" />
+            <meta name="twitter:player" content="<%= data.previewFile.pathTrue %>" />
+        <% } else if (data.previewFile.type == 'audio') { %>
+            <meta property="og:audio" content="<%= data.previewFile.pathTrue %>" />
+            <meta name="twitter:card" content="player" />
+            <meta name="twitter:title" content="<%= data.previewFile.name %>" />
+            <meta name="twitter:player" content="<%= data.previewFile.pathTrue %>" />
+        <% } %>
+    <% } else { %>
+        <meta property="og:title" content="<%= data.dir.name %>" />
+        <% if (data.ancestors.length) { %>
+            <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
+        <% } else { %>
+            <meta property="og:site_name" content="<%= data.opts.serverName %>" />
+        <% } %>
+    <% } %>
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f2" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1a1a" />
     <link rel="icon" href="">

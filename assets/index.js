@@ -378,6 +378,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         entry.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const items = [];
+            const elFile = document.createElement('div');
+            elFile.classList.add('file');
+            elFile.innerHTML = /*html*/`
+                <div class="icon ${data.type}"></div>
+                <div class="details">
+                    <div class="name"></div>
+                    <div class="modified"></div>
+                    <div class="size"></div>
+                </div>
+            `;
+            const elIcon = elFile.querySelector('.icon');
+            const elName = elFile.querySelector('.name');
+            const elModified = elFile.querySelector('.modified');
+            const elSize = elFile.querySelector('.size');
+            elIcon.innerText = data.icon;
+            elName.innerText = data.name;
+            if (data.modified == '-')
+                elModified.style.display = 'none';
+            else
+                elModified.innerText = dayjs(data.modified).format(document.body.dataset.fileTimeFormat);
+            if (data.size == '-')
+                elSize.style.display = 'none';
+            else
+                elSize.innerText = formatBytes(data.size);
+            items.push({ type: 'element', element: elFile });
+            items.push({ type: 'separator' });
             if (data.type != 'folder' && data.size > 0) {
                 items.push({
                     type: 'item',
@@ -436,24 +462,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     navigator.clipboard.writeText(url.toString());
                 }
             });
-            items.push({
-                type: 'item',
-                icon: 'link',
-                label: 'Copy direct file link',
-                onClick: () => {
-                    navigator.clipboard.writeText(window.location.origin + data.pathTrue);
-                }
-            });
             if (data.pathAlias) {
                 items.push({
                     type: 'item',
                     icon: 'link',
-                    label: 'Copy clean file link',
+                    label: 'Copy file link (clean)',
                     onClick: () => {
                         navigator.clipboard.writeText(window.location.origin + data.pathAlias);
                     }
                 });
             }
+            items.push({
+                type: 'item',
+                icon: 'link',
+                label: 'Copy file link',
+                onClick: () => {
+                    navigator.clipboard.writeText(window.location.origin + data.pathTrue);
+                }
+            });
             showContextMenu({ items });
         });
         // Show preview if query string matches file name
