@@ -16,6 +16,15 @@
     --c-btn-control-bg-hover: hsla(0, 0%, 75%, 80%);
 }
 
+body {
+    --c-icon-folder: hsl(40, 40%, 60%);
+    --c-icon-text: hsl(180, 40%, 60%);
+    --c-icon-image: hsl(220, 40%, 60%);
+    --c-icon-video: hsl(0, 40%, 60%);
+    --c-icon-audio: hsl(300, 40%, 60%);
+    --c-icon-file: var(--c-text-secondary);
+}
+
 .header {
     margin-bottom: 24px;
 }
@@ -116,7 +125,7 @@
     text-align: center;
     font-family: 'Material Symbols Outlined';
     font-size: 24px;
-    color: var(--c-text-secondary);
+    color: var(--c-icon-file);
 }
 
 .colHeaders .name,
@@ -188,6 +197,7 @@
     font-size: 32px;
     flex-shrink: 0;
     font-family: 'Material Symbols Outlined';
+    color: var(--c-icon-file);
 }
 .contextMenu > .file .details {
     display: flex;

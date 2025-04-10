@@ -73,14 +73,6 @@
 }
 
 body {
-    /* Global colors */
-    --c-icon-folder: hsl(40, 40%, 60%);
-    --c-icon-text: hsl(180, 40%, 60%);
-    --c-icon-image: hsl(220, 40%, 60%);
-    --c-icon-video: hsl(0, 40%, 60%);
-    --c-icon-audio: hsl(300, 40%, 60%);
-    --c-icon-file: hsl(0, 0%, 50%);
-    /* Body styles */
     background: var(--c-bg);
     font-family: 'Inter', sans-serif;
     font-size: 14px;
