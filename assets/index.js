@@ -315,7 +315,7 @@ const previewFile = async data => {
     }
     // Set query string
     const url = new URL(window.location.href);
-    url.searchParams.set('preview', data.name);
+    url.searchParams.set('preview', data.path.split('/').pop());
     history.pushState({}, '', url.toString());
     // Show preview dialog
     openPreview();
@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 label: 'Copy file preview link',
                 onClick: () => {
                     const url = new URL(window.location.href);
-                    url.searchParams.set('preview', data.name);
+                    url.searchParams.set('preview', data.path.split('/').pop());
                     navigator.clipboard.writeText(url.toString());
                 }
             });
