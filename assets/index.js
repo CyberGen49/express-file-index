@@ -459,6 +459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     label: 'Copy file preview link',
                     onClick: () => {
                         const url = new URL(window.location.href);
+                        url.search = '';
                         url.searchParams.set('preview', data.path.split('/').pop());
                         navigator.clipboard.writeText(url.toString());
                     }
