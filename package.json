@@ -1,13 +1,15 @@
 {
   "name": "express-file-index",
-  "version": "1.8.2",
-  "description": "A simple file index middleware for Express.",
+  "version": "1.8.4",
+  "description": "A simple file index middleware for Express that serves static files and shows a browser for directories.",
   "keywords": [
     "express",
     "readme",
-    "file-index",
     "index",
-    "file-sharing"
+    "file-index",
+    "file-browser",
+    "file-sharing",
+    "file-preview"
   ],
   "homepage": "https://github.com/CyberGen49/express-file-index#readme",
   "bugs": {

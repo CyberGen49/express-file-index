@@ -452,16 +452,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 items.push({ type: 'separator' });
             }
-            items.push({
-                type: 'item',
-                icon: 'link',
-                label: 'Copy file preview link',
-                onClick: () => {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('preview', data.path.split('/').pop());
-                    navigator.clipboard.writeText(url.toString());
-                }
-            });
+            if (data.type != 'folder' && data.size > 0) {
+                items.push({
+                    type: 'item',
+                    icon: 'link',
+                    label: 'Copy file preview link',
+                    onClick: () => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('preview', data.path.split('/').pop());
+                        navigator.clipboard.writeText(url.toString());
+                    }
+                });
+            }
             if (data.pathAlias) {
                 items.push({
                     type: 'item',
