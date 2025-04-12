@@ -580,8 +580,9 @@ module.exports = (options = {}) => async (req, res, next) => {
     const sortType = req.query.sortType || opts.defaultFileSortType;
     const sortOrder = req.query.sortOrder || opts.defaultFileSortOrder;
     const sortFunctions = {
-        name: (a, b) => a.name.localeCompare(b.name, {
-            sensitivity: 'base'
+        name: (a, b) => a.name.localeCompare(b.name, undefined, {
+            sensitivity: 'base',
+            numeric: true
         }),
         size: (a, b) => a.size - b.size,
         modified: (a, b) => a.modified - b.modified
