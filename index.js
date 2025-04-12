@@ -456,7 +456,7 @@ module.exports = (options = {}) => async (req, res, next) => {
         if (req.query.format == 'json') {
             if (!opts.allowJsonRequests) {
                 log(`Sending JSON disabled message for directory: ${pathAbs}`);
-                return res.json({
+                return res.status(403).json({
                     error: `JSON requests are disabled.`
                 });
             }
@@ -627,7 +627,7 @@ module.exports = (options = {}) => async (req, res, next) => {
     if (req.query.format == 'json') {
         if (!opts.allowJsonRequests) {
             log(`Sending JSON disabled message for directory: ${pathAbs}`);
-            return res.json({
+            return res.status(403).json({
                 error: `JSON requests are disabled.`
             });
         }
