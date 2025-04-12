@@ -29,7 +29,19 @@
     <script src="?expressFileIndexAsset=base.js"></script>
     <script src="?expressFileIndexAsset=index.js" defer></script>
 </head>
-<body data-color-mode="dark" data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-default-sort-type="<%= data.opts.defaultFileSortType %>" data-default-sort-order="<%= data.opts.defaultFileSortOrder %>">
+<body data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-default-sort-type="<%= data.opts.defaultFileSortType %>" data-default-sort-order="<%= data.opts.defaultFileSortOrder %>">
+    <script>
+        const setColorMode = () => {
+            const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
+            const iconMeta = document.querySelector('link[rel="icon"]');
+            if (iconMeta) {
+                iconMeta.setAttribute('href', `?expressFileIndexAsset=icon-${isDarkMode ? 'dark' : 'light'}.png`);
+            }
+        };
+        setColorMode();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
+    </script>
     <div class="container">
         <div class="header">
             <% if (data.ancestors.length) { %>

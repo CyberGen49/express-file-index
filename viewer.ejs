@@ -42,7 +42,19 @@
     <script src="?expressFileIndexAsset=base.js"></script>
     <script src="?expressFileIndexAsset=viewer.js" defer></script>
 </head>
-<body data-color-mode="dark" data-file="<%= JSON.stringify(data.file) %>">
+<body data-file="<%= JSON.stringify(data.file) %>">
+    <script>
+        const setColorMode = () => {
+            const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
+            const iconMeta = document.querySelector('link[rel="icon"]');
+            if (iconMeta) {
+                iconMeta.setAttribute('href', `?expressFileIndexAsset=icon-${isDarkMode ? 'dark' : 'light'}.png`);
+            }
+        };
+        setColorMode();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
+    </script>
     <div id="viewer">
         <div class="topbar">
             <a class="btn square secondary" href="<%= data.ancestors[data.ancestors.length - 1].path %>" title="Up to containing folder">

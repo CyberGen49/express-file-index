@@ -173,17 +173,3 @@ const showContextMenu = (options, shouldPosition = true) => {
     }, 50);
     return elMenu;
 };
-
-const setColorMode = () => {
-    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
-    const iconMeta = document.querySelector('link[rel="icon"]');
-    if (iconMeta) {
-        iconMeta.setAttribute('href', isDarkMode ? '?expressFileIndexAsset=icon-light.png' : '?expressFileIndexAsset=icon-dark.png');
-    }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    setColorMode();
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setColorMode);
-});
