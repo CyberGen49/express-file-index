@@ -5,38 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <% if (data.ancestors.length) { %>
         <title><%= data.dir.name %> - <%= data.opts.serverName %></title>
+        <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
     <% } else { %>
         <title><%= data.opts.serverName %></title>
+        <meta property="og:site_name" content="<%= data.opts.serverName %>" />
     <% } %>
-    <% if (data.previewFile) { %>
-        <meta property="og:site_name" content="<%=
-            [ ...data.ancestors.map(e => e.name), data.dir.name ].join(' > ')
-        %>" />
-        <meta property="og:title" content="<%= data.previewFile.name %>" />
-        <% if (data.previewFile.type == 'image') { %>
-            <meta property="og:image" content="<%= data.previewFile.pathTrue %>" />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:title" content="<%= data.previewFile.name %>" />
-            <meta name="twitter:image" content="<%= data.previewFile.pathTrue %>" />
-        <% } else if (data.previewFile.type == 'video') { %>
-            <meta property="og:video" content="<%= data.previewFile.pathTrue %>" />
-            <meta name="twitter:card" content="player" />
-            <meta name="twitter:title" content="<%= data.previewFile.name %>" />
-            <meta name="twitter:player" content="<%= data.previewFile.pathTrue %>" />
-        <% } else if (data.previewFile.type == 'audio') { %>
-            <meta property="og:audio" content="<%= data.previewFile.pathTrue %>" />
-            <meta name="twitter:card" content="player" />
-            <meta name="twitter:title" content="<%= data.previewFile.name %>" />
-            <meta name="twitter:player" content="<%= data.previewFile.pathTrue %>" />
-        <% } %>
-    <% } else { %>
-        <meta property="og:title" content="<%= data.dir.name %>" />
-        <% if (data.ancestors.length) { %>
-            <meta property="og:site_name" content="<%= data.ancestors.map(e => e.name).join(' > ') %>" />
-        <% } else { %>
-            <meta property="og:site_name" content="<%= data.opts.serverName %>" />
-        <% } %>
-    <% } %>
+    <meta property="og:title" content="<%= data.dir.name %>" />
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f2f2f2" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1a1a" />
     <link rel="icon" href="">
@@ -48,7 +22,6 @@
     <link href="?expressFileIndexAsset=base.css" rel="stylesheet">
     <link href="?expressFileIndexAsset=index.css" rel="stylesheet">
     <!-- JS -->
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@15/lib/marked.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios@1/dist/axios.min.js"></script>
@@ -56,7 +29,7 @@
     <script src="?expressFileIndexAsset=base.js"></script>
     <script src="?expressFileIndexAsset=index.js" defer></script>
 </head>
-<body data-color-mode="dark" data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-file-time-format="<%= data.opts.fileTimeFormat %>" data-file-select-action="<%= data.opts.fileSelectAction %>" data-default-sort-type="<%= data.opts.defaultFileSortType %>" data-default-sort-order="<%= data.opts.defaultFileSortOrder %>">
+<body data-color-mode="dark" data-can-folders-download="<%= data.opts.allowZipDownloads %>" data-default-sort-type="<%= data.opts.defaultFileSortType %>" data-default-sort-order="<%= data.opts.defaultFileSortOrder %>">
     <div class="container">
         <div class="header">
             <% if (data.ancestors.length) { %>
@@ -113,20 +86,20 @@
             </div>
             <div id="fileEntries" class="entries">
                 <% for (const file of data.files) { %>
-                    <a class="entry" href="<%= file.path %>" data-json="<%= JSON.stringify(file) %>">
+                    <a class="entry" href="<%= file.path + (data.opts.fileSelectAction == 'render' ? '?format=render' : '') %>" data-json="<%= JSON.stringify(file) %>" <%= data.opts.fileSelectAction == 'download' ? 'download' : '' %>>
                         <div class="icon material-symbols <%= file.type %>"><%= file.icon %></div>
                         <div class="name" title="<%= file.name %>">
                             <span><%= file.name %></span>
-                            <% if (file.modified != '-' && file.size != '-') { %>
+                            <% if (file.modified && file.size) { %>
                                 <span class="nameLore">
-                                    <span data-timestamp="<%= file.modified %>"></span>
+                                    <span><%= file.modifiedHuman %></span>
                                     <span>•</span>
-                                    <span data-bytes="<%= file.size %>"></span>
+                                    <span><%= file.sizeHuman %></span>
                                 </span>
                             <% } %>
                         </div>
-                        <div class="modified" data-timestamp="<%= file.modified %>">-</div>
-                        <div class="size" data-bytes="<%= file.size %>">-</div>
+                        <div class="modified" title="<%= new Date(file.modified) %>"><%= file.modifiedHuman %></div>
+                        <div class="size" title="<%= file.size %> bytes"><%= file.sizeHuman %></div>
                     </a>
                 <% } %>
             </div>
@@ -150,26 +123,6 @@
             <br>Provided by <a href="https://www.npmjs.com/package/express-file-index">express-file-index</a> v<%= data.packageVersion %>
             <br>Node.js <%= data.nodejsVersion %> on <%= data.osPlatform %> <%= data.osArch %>
         </div>
-    </div>
-    <div id="preview" style="display: none;">
-        <div class="topbar">
-            <button id="previewClose" class="btn secondary square" title="Close preview" onClick="closePreview()">
-                <span class="icon">close</span>
-            </button>
-            <div class="details">
-                <div id="previewFileName"></div>
-                <div id="previewFileDetails">
-                    <span id="previewFileModified"></span>
-                    <span>•</span>
-                    <span id="previewFileSize"></span>
-                </div>
-            </div>
-            <a id="previewDownload" class="btn" download title="Download file">
-                <span class="icon">download</span>
-                Download
-            </a>
-        </div>
-        <div id="previewContent"></div>
     </div>
 </body>
 </html>

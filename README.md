@@ -8,19 +8,19 @@
 
 ![Screenshot of both themes](./promo.png)
 
-I use this project for my personal file server. See it in practice [here](https://files.cybah.me/)!
+Check out this project in production on my personal file server [here](https://files.cybah.me/)!
 
 ## Features
 
-- **Static File Serving**: Serves files directly from the specified root directory.
-- **Directory Indexing**: Displays a navigable file index for directories.
-- **Customizable UI**: Use the built-in EJS template or provide your own.
+- **Directory Indexing**: Display a navigable file index for directories.
+- **Static File Serving**: Serve files directly from the specified root directory.
+- **Customizable UI**: Use the built-in EJS templates or provide your own.
 - **Sorting Options**: Sort files by name, size, or modification date.
 - **Hidden Files**: Hide files with specific prefixes from the index.
 - **Zip Downloads**: Optionally allow downloading directories as zip archives.
-- **Recursive Directory Stats**: Calculate accurate sizes and modification times for directories.
+- **Recursive Directory Stats**: Optionally calculate accurate sizes and modification times for directories.
+- **Custom File Viewer**: View and share images, videos, audio files, rendered markdown, and text files complete with syntax highlighting with a custom file viewer.
 - **Readme Display**: Parse and display README.md files in directories.
-- **File Previews**: View images, videos, audio files, and text files complete with syntax highlighting without leaving the file index.
 - **Clean URL Aliases**: Allow accessing files and directories with clean aliases in addition to their normal names.
 - **JSON API**: Allow fetching directory indexes as JSON.
 
@@ -34,7 +34,7 @@ npm install express-file-index
 
 ## Usage
 
-Here's an example of how to use `express-file-index` in an Express application:
+Here's an example of how to use `express-file-index` in an Express app:
 
 ```javascript
 const express = require('express');
@@ -50,13 +50,13 @@ app.use(index({
 }));
 
 app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+    console.log('Server started on port 3000');
 });
 ```
 
 ## Configuration
 
-The middleware accepts an options object to customize its behavior. Below are the available options:
+The middleware accepts an options object to customize its behavior. The available options are as follows:
 
 ### `string` `rootDir`
 The root directory of the file index.
@@ -66,7 +66,7 @@ Defaults to `./`.
 ### `string` `serverName`
 The name to use for the root directory in the file index.
 
-Defaults to the hostname of the server.
+Defaults to the hostname request header.
 
 ### `string[]` `hiddenFilePrefixes`
 A list of file prefixes that should be hidden from the file index.
@@ -146,10 +146,13 @@ Whether debug/activity logs should be printed to the console.
 
 Defaults to `false`.
 
-### `string[]` `ejsFilePath`
-The path to an EJS template file to use for the file index. 
+### `string` `indexEjsPath`
+The path to an EJS template file to use for the file index.
 
-This option is not recommended for most use cases, but can be used to develop your own file index UI. See the [Customization](#customization) section below for details.
+Defaults to the built-in template.
+
+### `string` `viewerEjsPath`
+The path to an EJS template file to use for viewing files in the browser.
 
 Defaults to the built-in template.
 
@@ -158,29 +161,26 @@ What should happen when a file is selected in the file index. Can be one of:
 
 - `default`: Leave it up to the browser to either download the file or open it in the same tab, depending on the file type.
 - `download`: Always download the file, regardless of the file type.
-- `preview`: Preview the file in a popup within the file index. If the file can't be previewed, the user will be prompted to download it.
+- `render`: Render the file using `express-file-index`'s custom file viewer.
 
-Defaults to `'preview'`.
+Defaults to `'render'`.
 
 ### `string` `fileTimeFormat`
 A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
 
 Defaults to `'MMM D, YYYY'`.
 
-## Query Parameters
+## Directory Query Parameters
 
-Invalid values for these parameters will be ignored/defaulted.
+These query parameters can be set on any directory URL handled by `express-file-index`. Invalid values for these parameters will be ignored/defaulted.
 
 ### `format`
 Controls the format in which the file index is returned. Accepts one of the following values:
 
-- `json`: If the `allowJsonRequests` option is `true`, returns the file index data as a JSON object containing a single `data` property, which contains the data outlined in the [Customization](#customization) section below.
+- `json`: If the `allowJsonRequests` option is `true`, returns the file index data as a JSON object.
 - `zip`: If the `allowZipDownloads` option is `true`, returns an uncompressed zip file of the directory and all of its subdirectories.
 
 Defaults to the rendered EJS template.
-
-### `preview`
-Instructs the file index UI to open a preview for a specified file on load. Accepts the name of a file immediately within the requested directory.
 
 ### `sortType`
 Controls the value to sort files by. Accepts one of `name`, `modified`, `size`.
@@ -192,23 +192,32 @@ Controls the direction files are sorted in. Accepts one of `asc`, `desc`.
 
 Defaults to the value set for the `defaultFileSortOrder` option.
 
+## File Query Parameters
+
+These query parameters can be set on any static file URL handled by `express-file-index`. Invalid values for these parameters will be ignored/defaulted.
+
+### `format`
+Controls the format in which the file is returned. Accepts one of the following values:
+
+- `render`: Returns rendered HTML for the custom file viewer.
+- `json`: If the `allowJsonRequests` option is `true`, returns the file metadata and rendering data as a JSON object.
+
+Defaults to the static file data.
+
 ## Customization
 
-You can customize the file index UI by providing your own EJS template file via the `ejsFilePath` option. The following data is available as properties under the `data` object:
+You can customize the file index UI by providing your own EJS template files via the `indexEjsPath` and `viewerEjsPath` options for file index pages and viewer pages respectively.
+
+This same data is available by request with the `format=json` query parameter on both directory and file URLs, if `allowJsonRequests` is `true`.
+
+### File Index Data
+
+The following data is provided to the `indexEjsPath` template under the `data` object:
 
 - `opts`: The `options` object you provided when initializing `express-file-index` merged with the default values you didn't explicitly set.
-- `ancestors`: An array of parent directories., each with `name` and `path` properties.
-- `dir`: An object describing the current directory, with the same format as an `ancestors` item.
-- `files`: A sorted array of files and directories in the current directory. Each entry contains the following:
-  - `string` `name`: The file name
-  - `string` `path`: If `forceCleanPathAliases` is `true`, this is the file's relative clean alias path. If it's `false`, this is the file's actual relative path.
-  - `string` `pathAlias`: The file's relative clean alias path, or `null` if `allowCleanPathAliases` is `false`
-  - `string` `pathTrue`: The file's actual relative path
-  - `boolean` `isDirectory`: Whether or not the file is a directory
-  - `number|string` `size`: The file's size in bytes, or `'-'` if not applicable
-  - `number|string` `modified`: The file's millisecond timestamp, or `'-'` if not applicable
-  - `string` `type` One of `'file'`, `'folder'`, `'text'`, `'image'`, `'audio'`, `'video'`, `'compressed'`, `'software'`
-  - `string` `icon` A [Google Material Symbol](https://fonts.google.com/icons) name
+- `ancestors`: An array of [ancestor](#ancestor)s representing the parent directories of the current directory.
+- `dir`: An [ancestor](#ancestor) object for the current directory.
+- `files`: A sorted array of [file](#file)s in the current directory.
 - `sortType`: The current sort type (`name`, `size`, or `modified`).
 - `sortOrder`: The current sort order (`asc` or `desc`).
 - `packageVersion`: The `express-file-index` version.
@@ -217,4 +226,41 @@ You can customize the file index UI by providing your own EJS template file via 
 - `osArch`: The operating system architecture.
 - `processTimeMs`: The number of milliseconds it took to process the request.
 
-This same data object is available by request with the `format=json` query parameter, if `allowJsonRequests` is `true`.
+### File Viewer Data
+
+The following data is provided to the `viewerEjsPath` template under the `data` object:
+
+- `opts`: The `options` object you provided when initializing `express-file-index` merged with the default values you didn't explicitly set.
+- `ancestors`: An array of [ancestor](#ancestor)s representing the parent directories of the requested file.
+- `file`: A [file](#file) object containing data for the requested file.
+- `packageVersion`: The `express-file-index` version.
+- `nodejsVersion`: The Node.js version.
+- `osPlatform`: The operating system platform.
+- `osArch`: The operating system architecture.
+- `processTimeMs`: The number of milliseconds it took to process the request.
+
+### Data types
+
+#### Ancestor
+
+Ancestor objects contain the following properties:
+
+- `string` `name`: The name of the ancestor
+- `string` `path`: The ancestor's relative path (or alias if `forceCleanPathAliases` is `true`).
+
+#### File
+
+File objects contain the following properties:
+
+- `string` `name`: The file name.
+- `string` `nameAlias`: The sanitized alias of the file name.
+- `string` `path`: The file's relative path (or alias if `forceCleanPathAliases` is `true`).
+- `string` `pathAlias`: The file's relative clean alias path, or `null` if `allowCleanPathAliases` is `false`.
+- `string` `pathTrue`: The file's actual relative path.
+- `boolean` `isDirectory`: Whether or not the file is a directory.
+- `number` `size`: The file's size in bytes, or `0` if it's a directory and the `statDirs` option is `false`.
+- `string` `sizeHuman`: The human-readable size of the file or `'-'` if `size` is `0`.
+- `number` `modified`: The file's millisecond timestamp, or `0` if it's a directory and the `statDirs` option is `false`.
+- `string` `modifiedHuman`: The human-readable modification time or `'-'` if `modified` is `0`.
+- `string` `type`: One of `'file'`, `'folder'`, `'text'`, `'image'`, `'audio'`, `'video'`, `'compressed'`, `'software'`.
+- `string` `icon`: A [Google Material Symbol](https://fonts.google.com/icons) name.

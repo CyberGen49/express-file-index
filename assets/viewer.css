@@ -1,0 +1,221 @@
+[data-color-mode='dark'] {
+    --c-preview-card-bg: hsl(0, 0%, 12%);
+    --c-btn-control-bg: hsla(0, 0%, 20%, 80%);
+    --c-btn-control-bg-hover: hsla(0, 0%, 30%, 80%);
+}
+
+[data-color-mode='light'] {
+    --c-preview-card-bg: hsl(0, 0%, 97%);
+    --c-btn-control-bg: hsla(0, 0%, 85%, 80%);
+    --c-btn-control-bg-hover: hsla(0, 0%, 75%, 80%);
+}
+
+#viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+}
+#viewer .topbar {
+    display: flex;
+    align-items: center;
+    padding: 16px 16px 0px 16px;
+    gap: 16px;
+    flex-shrink: 0;
+}
+#viewer .topbar .details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0px;
+}
+#fileName {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--c-text-normal);
+}
+#fileDetails {
+    font-size: 12px;
+    color: var(--c-text-secondary);
+}
+#content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+#content .card {
+    margin: auto;
+    border-radius: 16px;
+    max-height: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    background: var(--c-preview-card-bg);
+    border: 1px solid var(--c-border);
+}
+#content .card > .body {
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 20px 16px;
+}
+#content .card > .body > *:first-child {
+    margin-top: 0px;
+}
+#content .card > .body > *:last-child {
+    margin-bottom: 0px;
+}
+
+#content .card.column > .body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+#content .card.text,
+#content .card.html {
+    max-width: 1000px;
+    width: 100%;
+}
+#content .card.text {
+    max-width: 1200px;
+}
+
+#content .card.text > .body {
+    background: none;
+    border: none;
+    margin: 0px;
+    border-radius: 0px;
+    font-family: 'Roboto Mono', monospace;
+    white-space: pre;
+    display: block;
+    padding: 12px;
+    width: 100%;
+}
+
+#content .card.image > .body,
+#content .card.video > .body {
+    padding: 0px;
+    object-fit: contain;
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#content .card.audio {
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 1;
+}
+#content .card.audio > .body .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: center;
+}
+#content .card.audio > .body .progress {
+    width: 100%;
+    max-width: 500px;
+}
+#content .card.audio > .body .times {
+    display: flex;
+    font-size: 12px;
+    color: var(--c-text-secondary);
+}
+#content .card.audio > .body .times .grow {
+    flex-grow: 1;
+}
+
+#content .card.video > .body .overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+#content .card.video > .body .overlay.visible {
+    opacity: 1;
+    transition: none;
+}
+#content .card.video > .body .overlay > * {
+    pointer-events: none;
+}
+#content .card.video > .body .overlay.visible > * {
+    pointer-events: all;
+}
+
+#content .card.video > .body .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+#content .card.video > .body .controls > * {
+    backdrop-filter: blur(8px);
+}
+#content .card.video > .body .controls button {
+    background: var(--c-btn-control-bg);
+}
+#content .card.video > .body .controls button:hover,
+#content .card.video > .body .controls button:focus-visible {
+    background: var(--c-btn-control-bg-hover);
+}
+#content .card.video > .body .controls .progress {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0px 12px;
+    background: var(--c-btn-control-bg);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--c-text-normal);
+    --c-slider-track-bg: var(--c-btn-control-bg-hover);
+}
+
+#content video,
+#content img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+@media (max-width: 600px) {
+    
+    #viewer .topbar {
+        padding: 16px 8px 0px 8px;
+    }
+    #content {
+        padding: 16px 8px 8px 8px;
+    }
+
+}

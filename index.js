@@ -3,6 +3,7 @@ const path = require('path');
 const Express = require('express');
 const ejs = require('ejs');
 const archiver = require('archiver');
+const dayjs = require('dayjs');
 
 /**
  * @typedef {Object} DefaultIndexOptions
@@ -13,7 +14,7 @@ const archiver = require('archiver');
  * @property {string} serverName
  * The name to use for the root directory in the file index.
  * 
- * Defaults to the hostname of the server.
+ * Defaults to the hostname request header.
  * @property {string[]} hiddenFilePrefixes
  * A list of file prefixes that should be hidden from the file index.
  * 
@@ -88,20 +89,26 @@ const archiver = require('archiver');
  * Whether debug/activity logs should be printed to the console.
  * 
  * Defaults to `false`.
- * @property {string[]} ejsFilePath
+ * @property {string[]} indexEjsPath
  * The path to an EJS template file to use for the file index. 
  * 
  * This option is not recommended for most use cases, but can be used to develop your own file index UI. See the **Customization** section of the project readme for details.
  * 
  * Defaults to the built-in template.
- * @property {'default'|'download'|'preview'} fileSelectAction
+ * @property {string[]} viewerEjsPath
+ * The path to an EJS template file to use for viewing files in the browser.
+ * 
+ * This option is not recommended for most use cases, but can be used to develop your own file viewer UI. See the **Customization** section of the project readme for details.
+ * 
+ * Defaults to the built-in template.
+ * @property {'default'|'download'|'view'} fileSelectAction
  * What should happen when a file is selected in the file index. Can be one of:
  * 
  * - `default`: Leave it up to the browser to either download the file or open it in the same tab, depending on the file type.
  * - `download`: Always download the file, regardless of the file type.
- * - `preview`: Preview the file in a popup within the file index. If the file can't be previewed, the user will be prompted to download it.
+ * - `render`: Render the file using `express-file-index`'s custom file viewer.
  * 
- * Defaults to `'preview'`.
+ * Defaults to `'view'`.
  * @property {string} fileTimeFormat
  * A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
  * 
@@ -126,6 +133,28 @@ const fileExists = async (filePath) => {
     }
 }
 
+// Function to round a number based on its size
+const roundSmart = (num) => {
+    if (num < 1)
+        return parseFloat(num.toFixed(3));
+    if (num < 10)
+        return parseFloat(num.toFixed(2));
+    if (num < 100)
+        return parseFloat(num.toFixed(1));
+    return parseFloat(num.toFixed(0));
+};
+
+// Function to format bytes into a human-readable string
+const formatBytes = bytes => {
+    const units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB' ];
+    let i = 0;
+    while (bytes >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        i++;
+    }
+    return `${roundSmart(bytes)} ${units[i]}`;
+};
+
 /**
  * @type {DefaultIndexOptions}
  */
@@ -144,8 +173,9 @@ const defaultOpts = {
     allowCleanPathAliases: false,
     forceCleanPathAliases: false,
     enableLogging: false,
-    ejsFilePath: path.join(__dirname, 'index.ejs'),
-    fileSelectAction: 'preview',
+    indexEjsPath: path.join(__dirname, 'index.ejs'),
+    viewerEjsPath: path.join(__dirname, 'viewer.ejs'),
+    fileSelectAction: 'render',
     fileTimeFormat: 'MMM D, YYYY'
 };
 
@@ -278,6 +308,70 @@ module.exports = (options = {}) => async (req, res, next) => {
         return pathRelAlias;
     };
 
+    // Function to get file data object
+    const getFileData = async(filePathAbs, filePathRel, shouldRecurse = opts.statDirs) => {
+        const fileName = path.basename(filePathAbs);
+        const fileExt = path.extname(fileName).toLowerCase();
+        const stats = await fs.stat(filePathAbs);
+        const isDirectory = stats.isDirectory();
+        let size = isDirectory ? 0 : stats.size;
+        let modified = isDirectory ? 0 : stats.mtimeMs;
+
+        // Process directories if enabled
+        if (isDirectory && shouldRecurse) {
+            const recurse = async (dirPath) => {
+                const fileNames = await fs.readdir(dirPath);
+                for (const fileName of fileNames) {
+                    const filePathAbs = path.join(dirPath, fileName);
+                    const stats = await fs.stat(filePathAbs);
+                    if (stats.isDirectory()) {
+                        await recurse(filePathAbs);
+                    } else {
+                        size += stats.size;
+                        modified = Math.max(modified, stats.mtimeMs);
+                    }
+                }
+            };
+            await recurse(filePathAbs);
+        }
+
+        // Determine file type and icon
+        const typeExtensions = require(path.join(__dirname, 'type-extensions.json'));
+        const typeIcons = {
+            file: 'draft',
+            folder: 'folder',
+            text: 'description',
+            image: 'image',
+            audio: 'volume_up',
+            video: 'movie',
+            compressed: 'folder_zip',
+            software: 'wysiwyg'
+        };
+        const fileType = isDirectory ? 'folder' : Object.keys(typeExtensions).find(type =>
+            typeExtensions[type].includes(fileExt)
+        ) || 'file';
+
+        // Add to list
+        const trailingSlash = (isDirectory && filePathRel != '/') ? '/' : '';
+        const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) : null;
+        const fileNameAlias = getFileNameAlias(fileName);
+        const data = {
+            name: fileName,
+            nameAlias: fileNameAlias,
+            path: (opts.forceCleanPathAliases ? filePathRelAlias : filePathRel) + trailingSlash,
+            pathAlias: filePathRelAlias + trailingSlash,
+            pathTrue: filePathRel + trailingSlash,
+            isDirectory,
+            size,
+            sizeHuman: size ? formatBytes(size) : '-',
+            modified,
+            modifiedHuman: modified ? dayjs(modified).format(opts.fileTimeFormat) : '-',
+            type: fileType,
+            icon: typeIcons[fileType]
+        };
+        return data;
+    }
+
     // Handle asset requests
     const asset = req.query.expressFileIndexAsset;
     if (asset) {
@@ -314,19 +408,78 @@ module.exports = (options = {}) => async (req, res, next) => {
         }
     }
 
+    // Initialize render data
+    const renderData = {
+        opts,
+        packageVersion: require(path.join(__dirname, 'package.json')).version,
+        nodejsVersion: process.version,
+        osPlatform: process.platform,
+        osArch: process.arch
+    };
+
+    // Get parent directory names and paths
+    const pathParts = pathRel.split('/').filter(Boolean);
+    const ancestors = [
+        { name: opts.serverName, path: '/' },
+    ];
+    for (let i = 0; i < pathParts.length; i++) {
+        const ancestorPathRel = '/' + pathParts.slice(0, i + 1).join('/');
+        const ancestorPathRelAlias = await getPathAlias(ancestorPathRel);
+        const ancestorName = pathParts[i];
+        ancestors.push({
+            name: ancestorName,
+            path: opts.forceCleanPathAliases ? ancestorPathRelAlias : ancestorPathRel,
+            pathAlias: ancestorPathRelAlias,
+            pathTrue: ancestorPathRel,
+        });
+    }
+    renderData.ancestors = ancestors;
+
     // Get requested resource stats
     const stats = await fs.stat(pathAbs);
 
     // If the requested resource is a file
     if (stats.isFile()) {
+
+        // If rendered viewer is requested
+        if (req.query.format == 'render') {
+            log(`Rendering file viewer for file: ${pathAbs}`);
+            renderData.ancestors.pop();
+            renderData.file = await getFileData(pathAbs, pathRel);
+            renderData.processTimeMs = Date.now() - renderStartTime;
+            const html = await ejs.renderFile(opts.viewerEjsPath, { data: renderData });
+            res.setHeader('Content-Type', 'text/html');
+            return res.end(html);
+        }
+
+        // If JSON data is requested and enabled
+        if (req.query.format == 'json') {
+            if (!opts.allowJsonRequests) {
+                log(`Sending JSON disabled message for directory: ${pathAbs}`);
+                return res.json({
+                    error: `JSON requests are disabled.`
+                });
+            }
+            log(`Sending JSON data for file: ${pathAbs}`);
+            renderData.file = await getFileData(pathAbs, pathRel);
+            renderData.processTimeMs = Date.now() - renderStartTime;
+            return res.json({ data: renderData });
+        }
+
         // Serve static file
         log(`Requested static file: ${pathAbs}`);
         return res.sendFile(pathAbs);
+
     }
     
     // Redirect directory requests without a trailing slash to include it
     if (!req.path.endsWith('/')) {
         return res.redirect(301, req.path + '/');
+    }
+
+    // Redirect old preview URLs to new render URLs
+    if (req.query.preview) {
+        return res.redirect(path.join(pathRel, req.query.preview) + '?format=render');
     }
     
     // Zip and send if requested and enabled
@@ -411,85 +564,24 @@ module.exports = (options = {}) => async (req, res, next) => {
     for (let i = 0; i < Math.min(fileNames.length, limit); i++) {
         const fileName = fileNames[i + offset];
 
-        // Skip if the file is hidden
+        // Skip if the file hs a hidden prefix
         if (opts.hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
             continue;
 
-        // Get file paths and stats
-        const filePathRel = path.join(pathRel, fileName);
+        // Get file paths
         const filePathAbs = path.join(pathAbs, fileName);
-        const fileExt = path.extname(fileName).toLowerCase();
-        const stats = await fs.stat(filePathAbs);
-        const isDirectory = stats.isDirectory();
-        let size = isDirectory ? '-' : stats.size;
-        let modified = isDirectory ? '-' : stats.mtimeMs;
+        const filePathRel = path.join(pathRel, fileName);
 
-        // Process directories if enabled
-        if (isDirectory && opts.statDirs) {
-            size = 0;
-            modified = 0;
-            const recurse = async (dirPath) => {
-                const fileNames = await fs.readdir(dirPath);
-                for (const fileName of fileNames) {
-                    const filePathAbs = path.join(dirPath, fileName);
-                    const stats = await fs.stat(filePathAbs);
-                    if (stats.isDirectory()) {
-                        await recurse(filePathAbs);
-                    } else {
-                        size += stats.size;
-                        modified = Math.max(modified, stats.mtimeMs);
-                    }
-                }
-            };
-            await recurse(filePathAbs);
-            size = size || '-';
-            modified = modified || '-';
-        }
-
-        // Determine file type and icon
-        const typeExtensions = require(path.join(__dirname, 'type-extensions.json'));
-        const typeIcons = {
-            file: 'draft',
-            folder: 'folder',
-            text: 'description',
-            image: 'image',
-            audio: 'volume_up',
-            video: 'movie',
-            compressed: 'folder_zip',
-            software: 'wysiwyg'
-        };
-        const fileType = isDirectory ? 'folder' : Object.keys(typeExtensions).find(type =>
-            typeExtensions[type].includes(fileExt)
-        ) || 'file';
-
-        // Add to list
-        const trailingSlash = (isDirectory && filePathRel != '/') ? '/' : '';
-        const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) : null;
-        const fileNameAlias = getFileNameAlias(fileName);
-        const data = {
-            name: fileName,
-            path: (opts.forceCleanPathAliases ? filePathRelAlias : filePathRel) + trailingSlash,
-            pathAlias: filePathRelAlias + trailingSlash,
-            pathTrue: filePathRel + trailingSlash,
-            isDirectory,
-            size,
-            modified,
-            type: fileType,
-            icon: typeIcons[fileType]
-        };
-        (isDirectory ? dirsOnly : filesOnly).push(data);
-
-        // Save preview file data if requested
-        const previewFileName = req.query.preview;
-        if (!isDirectory && req.query.preview) {
-            if (fileNameAlias == previewFileName || fileName == previewFileName) {
-                previewFile = data;
-            }
-        }
+        // Get and save file data
+        const data = await getFileData(filePathAbs, filePathRel);
+        if (data.isDirectory)
+            dirsOnly.push(data);
+        else
+            filesOnly.push(data);
 
     }
 
-    // Sort and combine files
+    // Sort files
     const sortType = req.query.sortType || opts.defaultFileSortType;
     const sortOrder = req.query.sortOrder || opts.defaultFileSortOrder;
     const sortFunctions = {
@@ -501,63 +593,35 @@ module.exports = (options = {}) => async (req, res, next) => {
     };
     dirsOnly.sort(sortFunctions.name).sort(sortFunctions[sortType]);
     filesOnly.sort(sortFunctions.name).sort(sortFunctions[sortType]);
+
+    // Reverse files if requested
     if (sortOrder === 'desc') {
         dirsOnly.reverse();
         filesOnly.reverse();
     }
 
-    log(`Processed ${dirsOnly.length} subdirs and ${filesOnly.length} files in directory: ${pathAbs}`);
-
-    // Add parent directory
-    const pathParts = pathRel.split('/').filter(Boolean);
-    if (pathRel !== '/') {
-        const pathRelParent = pathParts[pathParts.length - 1];
-        const pathRelParentAlias = await getPathAlias(path.join(pathRel, './..'));
-        dirsOnly.unshift({
-            name: '..',
-            path: opts.allowCleanPathAliases ? pathRelParentAlias : path.join(pathRel, './..'),
-            pathAlias: pathRelParentAlias,
-            pathTrue: pathRelParent,
-            isDirectory: true,
-            size: '-',
-            modified: '-',
-            type: 'folder',
-            icon: 'drive_folder_upload'
-        });
-    }
+    // Combine directories and files
     const files = [ ...dirsOnly, ...filesOnly ];
 
-    // Get parent directory names and paths
-    const ancestorDirs = [
-        { name: opts.serverName, path: '/' },
-    ];
-    for (let i = 0; i < pathParts.length; i++) {
-        const ancestorPathRel = '/' + pathParts.slice(0, i + 1).join('/');
-        const ancestorPathRelAlias = await getPathAlias(ancestorPathRel);
-        const ancestorName = pathParts[i];
-        ancestorDirs.push({
-            name: ancestorName,
-            path: opts.forceCleanPathAliases ? ancestorPathRelAlias : ancestorPathRel,
-            pathAlias: ancestorPathRelAlias,
-            pathTrue: ancestorPathRel,
-        });
+    // Add parent directory
+    if (pathRel !== '/') {
+        const pathRelParent = path.join(pathRel, './..');
+        const pathAbsParent = path.join(pathAbs, './..');
+        const parentFileData = await getFileData(pathAbsParent, pathRelParent, false);
+        parentFileData.name = '..';
+        parentFileData.nameAlias = '..';
+        parentFileData.icon = 'drive_folder_upload';
+        files.unshift(parentFileData);
     }
 
+    log(`Processed ${dirsOnly.length} subdirs and ${filesOnly.length} files in directory: ${pathAbs}`);
+
     // Finalize index data
-    const data = {
-        opts,
-        ancestors: ancestorDirs,
-        dir: ancestorDirs.pop(),
-        files,
-        sortType,
-        sortOrder,
-        previewFile,
-        packageVersion: require(path.join(__dirname, 'package.json')).version,
-        nodejsVersion: process.version,
-        osPlatform: process.platform,
-        osArch: process.arch,
-        processTimeMs: Date.now() - renderStartTime
-    };
+    renderData.dir = ancestors.pop();
+    renderData.files = files;
+    renderData.sortType = sortType;
+    renderData.sortOrder = sortOrder;
+    renderData.processTimeMs = Date.now() - renderStartTime
 
     // Return data as JSON if requested
     if (req.query.format == 'json') {
@@ -568,12 +632,12 @@ module.exports = (options = {}) => async (req, res, next) => {
             });
         }
         log(`Sending JSON data for directory: ${pathAbs}`);
-        return res.json({ data });
+        return res.json({ data: renderData });
     }
 
     // Render index
     log(`Rendering file index for directory: ${pathAbs}`);
-    const html = await ejs.renderFile(opts.ejsFilePath, { data });
+    const html = await ejs.renderFile(opts.indexEjsPath, { data: renderData });
 
     // Respond
     res.setHeader('Content-Type', 'text/html');

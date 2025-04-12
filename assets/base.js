@@ -1,23 +1,3 @@
-const roundSmart = (num) => {
-    if (num < 1)
-        return parseFloat(num.toFixed(3));
-    if (num < 10)
-        return parseFloat(num.toFixed(2));
-    if (num < 100)
-        return parseFloat(num.toFixed(1));
-    return parseFloat(num.toFixed(0));
-};
-
-const formatBytes = bytes => {
-    const units = [ 'B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB' ];
-    let i = 0;
-    while (bytes >= 1024 && i < units.length - 1) {
-        bytes /= 1024;
-        i++;
-    }
-    return `${roundSmart(bytes)} ${units[i]}`;
-};
-
 const formatSecondsToTimestamp = (seconds) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -26,6 +6,36 @@ const formatSecondsToTimestamp = (seconds) => {
         return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     }
     return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
+// Wrap the string to a specific length on word boundaries
+// or if the string is too long, wrap it to the next line
+// Credit to gpt-4o
+function wrapString(input, maxLength) {
+    const lines = input.split('\n');
+    const wrappedLines = lines.map(line => {
+        const words = line.split(' ');
+        let currentLine = '';
+        let result = [];
+
+        words.forEach(word => {
+            while (word.length > maxLength) {
+                result.push(word.slice(0, maxLength));
+                word = word.slice(maxLength);
+            }
+
+            if ((currentLine + word).length > maxLength) {
+                result.push(currentLine.trim());
+                currentLine = '';
+            }
+            currentLine += word + ' ';
+        });
+
+        result.push(currentLine.trim());
+        return result.join('\n');
+    });
+
+    return wrappedLines.join('\n');
 }
 
 // Returns true if a string is plain text, false if it contains binary data
@@ -70,6 +80,7 @@ document.addEventListener('mousemove', (e) => {
     mouse.y = e.clientY;
 });
 
+
 const showContextMenu = (options, shouldPosition = true) => {
     options = options || {};
     options.width = options.width || 'auto';
@@ -87,6 +98,7 @@ const showContextMenu = (options, shouldPosition = true) => {
                 btn.innerHTML += `<span class="icon">${item.icon || ''}</span>`;
                 btn.innerHTML += `<span class="label grow">${item.label}</span>`;
                 if (item.hint) btn.innerHTML += `<span class="hint">${item.hint}</span>`;
+                if (item.tooltip) btn.title = wrapString(item.tooltip, 75);
                 btn.onclick = async () => {
                     if (item.onClick) await item.onClick();
                     elMenu.close();
