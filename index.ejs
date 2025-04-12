@@ -134,7 +134,7 @@
             <%
                 let counts = {
                     files: data.files.filter(f => !f.isDirectory).length,
-                    dirs: data.files.filter(f => f.isDirectory).length - 1
+                    dirs: data.files.filter(f => f.isDirectory).length
                 }
             %>
             Processed <%= counts.dirs == 1 ? '1 directory' : `${counts.dirs} folders` %> and <%= counts.files == 1 ? '1 file' : `${counts.files} files` %> in <%= data.processTimeMs %> ms

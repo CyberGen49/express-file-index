@@ -556,13 +556,8 @@ module.exports = (options = {}) => async (req, res, next) => {
     dirFileNames[pathAbs] = fileNames;
     const filesOnly = [];
     const dirsOnly = [];
-    const limit = 1000;
-    const page = parseInt(req.query.page) || 1;
-    const offset = (page - 1) * limit;
-    let previewFile = null;
 
-    for (let i = 0; i < Math.min(fileNames.length, limit); i++) {
-        const fileName = fileNames[i + offset];
+    for (const fileName of fileNames) {
 
         // Skip if the file hs a hidden prefix
         if (opts.hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
