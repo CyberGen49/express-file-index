@@ -353,13 +353,13 @@ module.exports = (options = {}) => async (req, res, next) => {
 
         // Add to list
         const trailingSlash = (isDirectory && filePathRel != '/') ? '/' : '';
-        const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) : null;
+        const filePathRelAlias = opts.allowCleanPathAliases ? await getPathAlias(filePathRel) + trailingSlash : null;
         const fileNameAlias = getFileNameAlias(fileName);
         const data = {
             name: fileName,
             nameAlias: fileNameAlias,
-            path: (opts.forceCleanPathAliases ? filePathRelAlias : filePathRel) + trailingSlash,
-            pathAlias: filePathRelAlias + trailingSlash,
+            path: (opts.forceCleanPathAliases ? filePathRelAlias : filePathRel + trailingSlash),
+            pathAlias: filePathRelAlias,
             pathTrue: filePathRel + trailingSlash,
             isDirectory,
             size,
