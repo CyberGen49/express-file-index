@@ -36,7 +36,7 @@
             document.body.dataset.colorMode = isDarkMode ? 'dark' : 'light';
             const iconMeta = document.querySelector('link[rel="icon"]');
             if (iconMeta) {
-                iconMeta.setAttribute('href', `?expressFileIndexAsset=icon-${isDarkMode ? 'dark' : 'light'}.png`);
+                iconMeta.setAttribute('href', `?expressFileIndexAsset=icon-${isDarkMode ? 'light' : 'dark'}.png`);
             }
         };
         setColorMode();
