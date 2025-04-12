@@ -212,6 +212,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const html = markdownToSafeHTML(markdown);
         elReadmeBody.innerHTML = html;
         Prism.highlightAll(elReadmeBody);
+        // Hide extra files and add button to show them
+        // This brings the readme into view
+        if (fileEntryElements.length > 15) {
+            for (let i = 12; i < fileEntryElements.length; i++) {
+                fileEntryElements[i].style.display = 'none';
+            }
+            const elShowMoreCont = document.querySelector('#showMoreCont');
+            const btnShowMore = document.querySelector('#showMore');
+            btnShowMore.addEventListener('click', () => {
+                for (const el of fileEntryElements) {
+                    el.style.display = '';
+                }
+                elShowMoreCont.style.display = 'none';
+            });
+            elShowMoreCont.style.display = '';
+        }
     }
 
 });

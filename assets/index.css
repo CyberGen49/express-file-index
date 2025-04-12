@@ -207,6 +207,24 @@ body {
     color: var(--c-text-secondary);
 }
 
+#showMoreCont {
+    position: relative;
+    height: 100px;
+    margin-top: -100px;
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    background: linear-gradient(
+        to bottom, transparent 0%, var(--c-bg) 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+}
+#showMore {
+    pointer-events: all;
+}
+
 #readme {
     margin: 16px -8px 0px -8px;
     border-radius: 16px;
