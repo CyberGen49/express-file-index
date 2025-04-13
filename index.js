@@ -176,16 +176,11 @@ const msToRelativeTime = (ms) => {
     const months = Math.round(days / 30.4369);
     const years = Math.round(days / 365.2422);
     if (secs < 180) return 'Moments';
-    if (mins < 60) return `${mins} minutes`;
-    if (hours == 1) return `1 hour`;
-    if (hours < 24) return `${hours} hours`;
-    if (days == 1) return `1 day`;
-    if (days < 7) return `${days} days`;
-    if (weeks == 1) return `1 week`;
-    if (weeks < 4) return `${weeks} weeks`;
-    if (months == 1) return `1 month`;
-    if (months < 12) return `${months} months`;
-    if (years == 1) return `1 year`;
+    if (mins < 120) return `${mins} minutes`;
+    if (hours < 48) return `${hours} hours`;
+    if (days < 14) return `${days} days`;
+    if (weeks < 12) return `${weeks} weeks`;
+    if (months < 24) return `${months} months`;
     return `${years} years`;
 }
 const getRelativeTimestamp = (ts, anchor = Date.now()) => {
