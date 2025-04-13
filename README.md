@@ -116,6 +116,13 @@ When enabled, users will have the option to download directories (files and subd
 
 Defaults to `false`.
 
+### `number` `zipZlibLevel`
+The level of zlib compression (`0`-`9`) to use when streaming zip archives to users. Higher values result in smaller archives, but require more time and CPU power to compress. `0` is no compression.
+
+This option only applies when `allowZipDownloads` is `true`.
+
+Defaults to `0`.
+
 ### `boolean` `allowJsonRequests`
 Whether to expose file index data as JSON when the `format=json` query parameter is present.
 
@@ -169,6 +176,13 @@ Defaults to `'render'`.
 A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
 
 Defaults to `'MMM D, YYYY'`.
+
+### `boolean` `useRelativeTimes`
+Whether to use relative times for files in the file list instead of absolute times.
+
+When enabled, file modification times will be displayed as relative times (e.g., "2 hours ago") instead of formatted absolute dates.
+
+Defaults to `true`.
 
 ## Directory Query Parameters
 

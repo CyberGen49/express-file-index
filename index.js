@@ -58,11 +58,17 @@ const dayjs = require('dayjs');
  * 
  * Defaults to the built-in error page.
  * @property {boolean} allowZipDownloads
- * Whether to allow downloading directories recursively as (uncompressed) zip archives when the `format=zip` query parameter is present.
+ * Whether to allow downloading directories recursively as zip archives when the `format=zip` query parameter is present.
  * 
  * When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are built and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
  * 
  * Defaults to `false`.
+ * @property {number} zipZlibLevel
+ * The level of zlib compression (`0`-`9`) to use when streaming zip archives to users. Higher values result in smaller archives, but require more time and CPU power to compress. `0` is no compression.
+ * 
+ * This option only applies when `allowZipDownloads` is `true`.
+ * 
+ * Defaults to `0`.
  * @property {boolean} allowJsonRequests
  * Whether to expose file index data as JSON when the `format=json` query parameter is present.
  * 
@@ -113,6 +119,12 @@ const dayjs = require('dayjs');
  * A string representing the format of displayed file modification times using [Day.js format placeholders](https://day.js.org/docs/en/display/format).
  * 
  * Defaults to `'MMM D, YYYY'`.
+ * @property {boolean} useRelativeTimes
+ * Whether to use relative times for files in the file list instead of absolute times.
+ * 
+ * When enabled, file modification times will be displayed as relative times (e.g., "2 hours ago") instead of formatted absolute dates.
+ * 
+ * Defaults to `true`.
  */
 
 // Function to sanitize a file name so no URL encoding is needed
@@ -155,6 +167,35 @@ const formatBytes = bytes => {
     return `${roundSmart(bytes)} ${units[i]}`;
 };
 
+const msToRelativeTime = (ms) => {
+    const secs = Math.round(ms / 1000);
+    const mins = Math.round(secs / 60);
+    const hours = Math.round(mins / 60);
+    const days = Math.round(hours / 24);
+    const weeks = Math.round(days / 7);
+    const months = Math.round(days / 30.4369);
+    const years = Math.round(days / 365.2422);
+    if (secs < 180) return 'Moments';
+    if (mins < 60) return `${mins} minutes`;
+    if (hours == 1) return `1 hour`;
+    if (hours < 24) return `${hours} hours`;
+    if (days == 1) return `1 day`;
+    if (days < 7) return `${days} days`;
+    if (weeks == 1) return `1 week`;
+    if (weeks < 4) return `${weeks} weeks`;
+    if (months == 1) return `1 month`;
+    if (months < 12) return `${months} months`;
+    if (years == 1) return `1 year`;
+    return `${years} years`;
+}
+const getRelativeTimestamp = (ts, anchor = Date.now()) => {
+    const ms = anchor - ts;
+    const relativeTime = msToRelativeTime(ms);
+    if (ms < 0)
+        return `${relativeTime} from now`;
+    return `${relativeTime} ago`;
+}
+
 /**
  * @type {DefaultIndexOptions}
  */
@@ -169,6 +210,7 @@ const defaultOpts = {
     handle404: false,
     handle404Document: path.join(__dirname, '404.html'),
     allowZipDownloads: false,
+    zipZlibLevel: 0,
     allowJsonRequests: false,
     allowCleanPathAliases: false,
     forceCleanPathAliases: false,
@@ -176,7 +218,8 @@ const defaultOpts = {
     indexEjsPath: path.join(__dirname, 'index.ejs'),
     viewerEjsPath: path.join(__dirname, 'viewer.ejs'),
     fileSelectAction: 'render',
-    fileTimeFormat: 'MMM D, YYYY'
+    fileTimeFormat: 'MMM D, YYYY',
+    useRelativeTimes: true
 };
 
 /**
@@ -366,6 +409,7 @@ module.exports = (options = {}) => async (req, res, next) => {
             sizeHuman: size ? formatBytes(size) : '-',
             modified,
             modifiedHuman: modified ? dayjs(modified).format(opts.fileTimeFormat) : '-',
+            modifiedRelative: modified ? (getRelativeTimestamp(modified)) : '-',
             type: fileType,
             icon: typeIcons[fileType]
         };
@@ -488,34 +532,33 @@ module.exports = (options = {}) => async (req, res, next) => {
 
         // Process files recursively
         const entryArgs = [];
-        let size = 0;
         const recurse = async (dirPath) => {
             const fileNames = await fs.readdir(dirPath);
             for (const fileName of fileNames) {
                 if (opts.hiddenFilePrefixes.some(prefix => fileName.startsWith(prefix)))
                     continue;
                 const filePathAbs = path.join(dirPath, fileName);
+                const filePathAbsReal = await fs.realpath(filePathAbs);
                 const filePathRel = path.relative(pathAbs, filePathAbs);
-                const stats = await fs.stat(filePathAbs);
+                const stats = await fs.stat(filePathAbsReal);
                 if (stats.isDirectory()) {
                     await recurse(filePathAbs);
                 } else {
-                    entryArgs.push([ filePathAbs, { name: filePathRel } ]);
-                    size += stats.size;
+                    entryArgs.push([ filePathAbsReal, { name: filePathRel } ]);
                 }
             }
         };
         await recurse(pathAbs);
+        log(`Recursively discovered ${entryArgs.length} files in directory: ${pathAbs}`);
 
         // Communicate to the client
         const zipFileName = path.basename(pathAbs) + '.zip';
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader('Content-Disposition', `attachment; filename="${zipFileName}"`);
-        res.setHeader('Content-Length', size);
 
-        // Create archive and pipe files to response
+        // Create uncompressed archive and pipe files to response
         const archive = archiver('zip', {
-            zlib: { level: 0 } // No compression
+            zlib: { level: opts.zipZlibLevel }
         });
         archive.on('entry', entry => {
             log(`Added file to zip: ${path.join(pathAbs, entry.name)}`);
