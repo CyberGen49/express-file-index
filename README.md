@@ -110,7 +110,7 @@ The path to a custom 404 error page. `handle404` must be `true` for this option 
 Defaults to the built-in error page.
 
 ### `boolean` `allowZipDownloads`
-Whether to allow downloading directories recursively as (uncompressed) zip archives when the `format=zip` query parameter is present.
+Whether to allow downloading directories recursively as zip archives when the `format=zip` query parameter is present.
 
 When enabled, users will have the option to download directories (files and subdirectories) as zip archives. These zips are built and streamed to the user in real-time, so no extra space is used, but the CPU and network may be impacted during large zipping operations.
 
