@@ -104,7 +104,7 @@
                             <span><%= file.name %></span>
                             <% if (file.modified && file.size) { %>
                                 <span class="nameLore">
-                                    <span><%= file.modifiedHuman %></span>
+                                    <span><%= data.opts.useRelativeTimes ? file.modifiedRelative : file.modifiedHuman %></span>
                                     <span>•</span>
                                     <span><%= file.sizeHuman %></span>
                                 </span>

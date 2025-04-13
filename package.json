@@ -1,6 +1,6 @@
 {
   "name": "express-file-index",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "description": "A simple file index middleware for Express that serves static files and shows a browser for directories.",
   "keywords": [
     "express",

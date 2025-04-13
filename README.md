@@ -276,5 +276,6 @@ File objects contain the following properties:
 - `string` `sizeHuman`: The human-readable size of the file or `'-'` if `size` is `0`.
 - `number` `modified`: The file's millisecond timestamp, or `0` if it's a directory and the `statDirs` option is `false`.
 - `string` `modifiedHuman`: The human-readable modification time or `'-'` if `modified` is `0`.
+- `string` `modifiedRelative`: The human-readable relative modification time or `'-'` if `modified` is `0`.
 - `string` `type`: One of `'file'`, `'folder'`, `'text'`, `'image'`, `'audio'`, `'video'`, `'compressed'`, `'software'`.
 - `string` `icon`: A [Google Material Symbol](https://fonts.google.com/icons) name.
