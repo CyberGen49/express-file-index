@@ -65,6 +65,9 @@ body {
     padding: 0px 8px;
     gap: 8px;
     font-size: 14px;
+    will-change: background, border-color;
+    contain: paint layout;
+    transform: translateZ(0);
 }
 
 .colHeaders {

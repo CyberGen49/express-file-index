@@ -98,7 +98,7 @@
             </div>
             <div id="fileEntries" class="entries">
                 <% for (const file of data.files) { %>
-                    <a class="entry" href="<%= file.path + (!file.isDirectory && data.opts.fileSelectAction == 'render' ? '?format=render' : '') %>" data-json="<%= JSON.stringify(file) %>" <%= (!file.isDirectory && data.opts.fileSelectAction == 'download') ? 'download' : '' %>>
+                    <a class="entry" href="<%= file.path + (!file.isDirectory && data.opts.fileSelectAction == 'render' ? '?format=render' : '') %>" data-json="<%= JSON.stringify(file)     %>" <%= (!file.isDirectory && data.opts.fileSelectAction == 'download') ? 'download' : '' %>>
                         <div class="icon material-symbols <%= file.type %>"><%= file.icon %></div>
                         <div class="name" title="<%= file.name %>">
                             <span><%= file.name %></span>
